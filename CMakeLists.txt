@@ -64,3 +64,7 @@ endif()
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/DiligentCommunity")
     add_subdirectory(DiligentCommunity)
 endif()
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/VisionSource")
+    add_subdirectory(VisionSource)
+endif()
