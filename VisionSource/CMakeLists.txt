@@ -12,4 +12,7 @@ set(VISION_INCLUDES
     ${CMAKE_CURRENT_LIST_DIR}
 CACHE INTERNAL "")
 
+add_subdirectory(Editor)
 add_subdirectory(Engine)
+add_subdirectory(Shaders)
+add_subdirectory(ThirdParty)
