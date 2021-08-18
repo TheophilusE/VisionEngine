@@ -37,6 +37,7 @@ target_include_directories(VisionEngine PRIVATE
      "../ThirdParty/eigen-3.4-rc1"
      "../ThirdParty/entt-3.8.1"
      "../ThirdParty/spdlog-1.9.1"
+     "../ThirdParty/gainput"
      )
 if(METAL_SUPPORTED)
     target_include_directories(VisionEngine PRIVATE "../../DiligentCorePro")
@@ -62,6 +63,7 @@ PRIVATE
     Diligent-AssetLoader
     EnTT
     spdlog
+    gainput
 )
 
 if(D3D11_SUPPORTED)
