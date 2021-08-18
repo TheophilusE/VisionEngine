@@ -61,7 +61,6 @@
 #endif
 
 #include "Application.h"
-
 #include "GLFW/glfw3native.h"
 
 #if PLATFORM_MACOS
@@ -234,6 +233,9 @@ bool Application::InitEngine(RENDER_DEVICE_TYPE DevType)
 
     if (m_pDevice == nullptr || m_pImmediateContext == nullptr || m_pSwapChain == nullptr)
         return false;
+
+    // Initialize Logger
+    OS::Initialize();
 
     return true;
 }

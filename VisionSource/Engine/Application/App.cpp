@@ -32,6 +32,8 @@ void App::FixedUpdate(float dt)
 void App::Update(float dt)
 {
     dt = std::min(dt, Constants.MaxDT);
+
+    VISION_CORE_INFO(dt);
 }
 
 void App::PostUpdate()

@@ -32,7 +32,7 @@ using Ref = std::shared_ptr<T>;
 /// std::weak_ptr
 template <class T>
 using Weak = std::weak_ptr<T>;
-#include <wrl.h> // For using Microsoft::WRL::ComPtr<T>
+//#include <wrl.h> // For using Microsoft::WRL::ComPtr<T>
 
 // Serialization streams
 #include <fstream>

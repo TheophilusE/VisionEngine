@@ -49,7 +49,7 @@ private:
 
 // Core log macros
 #define VISION_CORE_TRACE(...)    ::Vision::OS::GetCoreLogger()->trace(__VA_ARGS__)
-#define ViSION_CORE_INFO(...)     ::Vision::OS::GetCoreLogger()->info(__VA_ARGS__)
+#define VISION_CORE_INFO(...)     ::Vision::OS::GetCoreLogger()->info(__VA_ARGS__)
 #define VISION_CORE_WARN(...)     ::Vision::OS::GetCoreLogger()->warn(__VA_ARGS__)
 #define VISION_CORE_ERROR(...)    ::Vision::OS::GetCoreLogger()->error(__VA_ARGS__)
 #define VISION_CORE_CRITICAL(...) ::Vision::OS::GetCoreLogger()->critical(__VA_ARGS__)
