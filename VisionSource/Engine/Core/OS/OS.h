@@ -26,7 +26,7 @@ public:
 	// Minor Bug Fixes, Alterations
 	int GetRevision();
 
-const char* GetVersionString();
+	const char* GetVersionString();
 
 private:
     static Ref<spdlog::logger> s_CoreLogger;
