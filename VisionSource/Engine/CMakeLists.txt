@@ -11,6 +11,9 @@ set(ENGINE_HEADERS
     Core/OS/Defines.h
     Core/OS/OS.h
     Core/OS/Timer.h
+
+    Input/InputListener.h
+    Input/InputManager.h
 )
 
 set(ENGINE_SOURCES
@@ -20,6 +23,9 @@ set(ENGINE_SOURCES
     Core/OS/Defines.cpp
     Core/OS/OS.cpp
     Core/OS/Timer.cpp
+
+    Input/InputListener.cpp
+    Input/InputManager.cpp
 )
 
 if(PLATFORM_MACOS)
@@ -34,10 +40,10 @@ target_compile_features(VisionEngine PUBLIC cxx_std_17)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_HEADERS} ${ENGINE_SOURCES})
 target_include_directories(VisionEngine PRIVATE
      "../../DiligentCore"
-     "../ThirdParty/eigen-3.4-rc1"
-     "../ThirdParty/entt-3.8.1"
-     "../ThirdParty/spdlog-1.9.1"
-     "../ThirdParty/gainput"
+     #"../ThirdParty/eigen-3.4-rc1"
+     ../ThirdParty/entt-3.8.1
+     ../ThirdParty/spdlog-1.9.1
+     ../ThirdParty/Gainput/include/
      )
 if(METAL_SUPPORTED)
     target_include_directories(VisionEngine PRIVATE "../../DiligentCorePro")
@@ -63,7 +69,7 @@ PRIVATE
     Diligent-AssetLoader
     EnTT
     spdlog
-    gainput
+    Gainput
 )
 
 if(D3D11_SUPPORTED)
