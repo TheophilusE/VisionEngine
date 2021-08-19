@@ -71,10 +71,6 @@ extern void* GetNSWindowView(GLFWwindow* wnd);
     #define GLFW_EXPOSE_NATIVE_WGL
 #endif
 
-// Engine Includes
-#include "../Core/Event/EventManager.h"
-#include "../Input/InputManager.h"
-
 namespace Vision
 {
 
@@ -122,8 +118,8 @@ bool Application::VCreateWindow(const char* Title, int Width, int Height, int Gl
     winHandle = glfwGetWin32Window(m_Window);
 
     // Store the current message event handler for the window
-	currentWndProc = (WNDPROC)GetWindowLongPtr(winHandle, GWLP_WNDPROC);
-	SetWindowLongPtr(winHandle, GWLP_WNDPROC, (long)WindowsProc);
+	//currentWndProc = (WNDPROC)GetWindowLongPtr(winHandle, GWLP_WNDPROC);
+	//SetWindowLongPtr(winHandle, GWLP_WNDPROC, (long)WindowsProc);
 
     glfwSetWindowUserPointer(m_Window, this);
     glfwSetFramebufferSizeCallback(m_Window, &GLFW_ResizeCallback);
@@ -135,6 +131,11 @@ bool Application::VCreateWindow(const char* Title, int Width, int Height, int Gl
     glfwSwapInterval(m_bVSync ? 1 : 0);
 
     glfwSetWindowSizeLimits(m_Window, 320, 240, GLFW_DONT_CARE, GLFW_DONT_CARE);
+
+    //int w = Width;
+    //int h = Height;
+    //InputSystem::GetSingleton()->Initialize(unsigned(w), unsigned(h));
+
     return true;
 }
 
@@ -249,7 +250,7 @@ bool Application::InitEngine(RENDER_DEVICE_TYPE DevType)
     if (m_pDevice == nullptr || m_pImmediateContext == nullptr || m_pSwapChain == nullptr)
         return false;
 
-    // Initialize Logger
+    // Initialize
     OS::Initialize();
 
     return true;

@@ -6,7 +6,7 @@
 
 namespace Vision
 {
-void InputManager::initialize(unsigned int width, unsigned int height)
+void InputManager::Initialize(unsigned int width, unsigned int height)
 {
 	m_GainputManager.SetDisplaySize(width, height);
 	m_Width = width;

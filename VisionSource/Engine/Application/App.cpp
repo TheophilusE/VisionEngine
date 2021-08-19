@@ -4,8 +4,6 @@
 
 #include "App.h"
 
-#include "../Input/InputSystem.h"
-
 namespace Vision
 {
 Application* CreateGLFWApp()
@@ -21,6 +19,8 @@ bool App::Initialize()
 void App::Start()
 {
     Application::Start();
+
+    
 }
 
 void App::PreUpdate()

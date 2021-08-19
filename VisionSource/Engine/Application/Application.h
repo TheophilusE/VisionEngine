@@ -20,6 +20,10 @@
 #include "GLFW/glfw3.h"
 #include "../Core/OS/OS.h"
 
+// Engine Includes
+#include "../Core/Event/EventManager.h"
+#include "../Input/InputSystem.h"
+
 namespace Vision
 {
 

@@ -1,3 +1,6 @@
+
+#pragma once
+
 #include "Application.h"
 
 namespace Vision
@@ -25,5 +28,8 @@ protected:
         const float MaxDT = 1.0f / 60.0f;
 
     } Constants;
+
+    
+    const HashMap<String, InputScheme> m_InputScheme;
 };
 } // namespace Vision

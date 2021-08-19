@@ -90,7 +90,7 @@ public:
 	static void Unmap(const Event::Type& action) { GetSingleton()->unmap(action); };
 	static Diligent::float2 GetMousePosition() { return GetSingleton()->getMousePosition(); };
 
-	void initialize(unsigned int width, unsigned int height);
+	void Initialize(unsigned int width, unsigned int height);
 
 	void setEnabled(bool enabled);
 

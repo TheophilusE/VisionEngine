@@ -12,7 +12,7 @@ InputSystem::InputSystem()
 
 Variant InputSystem::windowResized(const Event* event)
 {
-	const Diligent::float2& newSize = Extract<Diligent::float2>(event->getData());
+	const Vector2& newSize = Extract<Vector2>(event->getData());
 	InputManager::GetSingleton()->setDisplaySize(newSize);
 	return true;
 }
