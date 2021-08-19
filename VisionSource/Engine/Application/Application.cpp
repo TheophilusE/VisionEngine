@@ -61,10 +61,15 @@
 #endif
 
 #include "Application.h"
+#include <windows.h>
 #include "GLFW/glfw3native.h"
 
 #if PLATFORM_MACOS
 extern void* GetNSWindowView(GLFWwindow* wnd);
+#endif
+
+#if PLATFORM_WIN32
+    #define GLFW_EXPOSE_NATIVE_WGL
 #endif
 
 namespace Vision
