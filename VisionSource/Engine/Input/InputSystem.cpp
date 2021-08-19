@@ -12,7 +12,7 @@ InputSystem::InputSystem()
 
 Variant InputSystem::windowResized(const Event* event)
 {
-	const Vector2& newSize = Extract<Vector2>(event->getData());
+	const Diligent::float2& newSize = Extract<Diligent::float2>(event->getData());
 	InputManager::GetSingleton()->setDisplaySize(newSize);
 	return true;
 }
@@ -48,9 +48,9 @@ void InputSystem::flushSchemes()
 	InputManager::GetSingleton()->flushSchemes();
 }
 
-bool InputSystem::initialize(const JSON::json& systemData)
+bool InputSystem::Initialize()
 {
-	InputManager::GetSingleton()->initialize(systemData["width"], systemData["height"]);
+	//InputManager::GetSingleton()->initialize(systemData["width"], systemData["height"]);
 	return true;
 }
 
@@ -60,7 +60,7 @@ void InputSystem::setConfig(const SceneSettings& sceneSettings)
 	pushScheme(sceneSettings.startScheme);
 }
 
-void InputSystem::update(float deltaMilliseconds)
+void InputSystem::Update(float deltaMilliseconds)
 {
 	ZoneScoped;
 	InputManager::GetSingleton()->update();
