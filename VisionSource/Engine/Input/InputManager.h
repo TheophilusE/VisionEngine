@@ -71,8 +71,6 @@ class InputManager
 	InputManager(InputManager&) = delete;
 	~InputManager() = default;
 
-	void forwardMessage(const MSG& msg);
-
 	friend class Window;
 
 	unsigned int getNextID(int device, int button);
@@ -80,6 +78,7 @@ class InputManager
 
 public:
 	static InputManager* GetSingleton();
+	void forwardMessage(const MSG& msg);
 	static void SetEnabled(bool enabled) { GetSingleton()->setEnabled(enabled); };
 	static void MapBool(const Event::Type& action, Device device, DeviceButtonID button) { GetSingleton()->mapBool(action, device, button); };
 	static void MapFloat(const Event::Type& action, Device device, DeviceButtonID button) { GetSingleton()->mapBool(action, device, button); };

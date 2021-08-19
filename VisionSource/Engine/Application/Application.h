@@ -7,6 +7,9 @@
 #include <chrono>
 #include <vector>
 
+#define NOMINMAX
+#include <windows.h>
+
 #include "Common/interface/RefCntAutoPtr.hpp"
 
 #include "Graphics/GraphicsEngine/interface/RenderDevice.h"
@@ -22,6 +25,8 @@ namespace Vision
 
 using namespace Diligent;
 
+static HWND winHandle = NULL;
+static WNDPROC currentWndProc;
 
 class Application
 {
@@ -222,8 +227,11 @@ protected:
     bool                               m_bFullScreenMode = false;
     bool                               m_bShowUI         = true;
 
+protected:
+    static LRESULT CALLBACK WindowsProc(HWND windowHandler, UINT msg, WPARAM wParam, LPARAM lParam);
+
 private:
-    bool CreateWindow(const char* Title, int Width, int Height, int GlfwApiHint);
+    bool VCreateWindow(const char* Title, int Width, int Height, int GlfwApiHint);
     bool InitEngine(RENDER_DEVICE_TYPE DevType);
     bool ProcessCommandLine(const char* CmdLine, RENDER_DEVICE_TYPE& DevType);
     void Run();

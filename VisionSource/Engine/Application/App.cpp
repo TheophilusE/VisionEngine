@@ -4,6 +4,8 @@
 
 #include "App.h"
 
+#include "../Input/InputSystem.h"
+
 namespace Vision
 {
 Application* CreateGLFWApp()

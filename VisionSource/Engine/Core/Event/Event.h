@@ -35,6 +35,9 @@ struct VisionEvents
 	/// Application exited the main loop
 	DEFINE_EVENT(ApplicationExit);
 
+	// Window Close Request
+	DEFINE_EVENT(QuitWindowRequest);
+
     /// Window has resized to size passed in
 	DEFINE_EVENT(WindowResized, Diligent::float2);
 

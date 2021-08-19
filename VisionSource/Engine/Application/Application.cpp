@@ -61,7 +61,6 @@
 #endif
 
 #include "Application.h"
-#include <windows.h>
 #include "GLFW/glfw3native.h"
 
 #if PLATFORM_MACOS
@@ -71,6 +70,10 @@ extern void* GetNSWindowView(GLFWwindow* wnd);
 #if PLATFORM_WIN32
     #define GLFW_EXPOSE_NATIVE_WGL
 #endif
+
+// Engine Includes
+#include "../Core/Event/EventManager.h"
+#include "../Input/InputManager.h"
 
 namespace Vision
 {
@@ -95,7 +98,7 @@ Application::~Application()
     }
 }
 
-bool Application::CreateWindow(const char* Title, int Width, int Height, int GlfwApiHint)
+bool Application::VCreateWindow(const char* Title, int Width, int Height, int GlfwApiHint)
 {
     if (glfwInit() != GLFW_TRUE)
         return false;
@@ -114,6 +117,13 @@ bool Application::CreateWindow(const char* Title, int Width, int Height, int Glf
         LOG_ERROR_MESSAGE("Failed to create GLFW window");
         return false;
     }
+
+    // Set Win32 Handle
+    winHandle = glfwGetWin32Window(m_Window);
+
+    // Store the current message event handler for the window
+	currentWndProc = (WNDPROC)GetWindowLongPtr(winHandle, GWLP_WNDPROC);
+	SetWindowLongPtr(winHandle, GWLP_WNDPROC, (long)WindowsProc);
 
     glfwSetWindowUserPointer(m_Window, this);
     glfwSetFramebufferSizeCallback(m_Window, &GLFW_ResizeCallback);
@@ -245,11 +255,19 @@ bool Application::InitEngine(RENDER_DEVICE_TYPE DevType)
     return true;
 }
 
+LRESULT CALLBACK Application::WindowsProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+    InputManager::GetSingleton()->forwardMessage({hwnd, Msg, wParam, lParam });
+    return DefWindowProc(hwnd, Msg, wParam, lParam);
+}
+
 void Application::GLFW_ResizeCallback(GLFWwindow* wnd, int w, int h)
 {
     auto* pSelf = static_cast<Application*>(glfwGetWindowUserPointer(wnd));
     if (pSelf->m_pSwapChain != nullptr)
         pSelf->m_pSwapChain->Resize(static_cast<Uint32>(w), static_cast<Uint32>(h));
+
+    EventManager::GetSingleton()->call(VisionEvents::WindowResized, float2{static_cast<float>(w), static_cast<float>(h)});
 }
 
 void Application::GLFW_KeyCallback(GLFWwindow* wnd, int key, int, int state, int)
@@ -414,6 +432,7 @@ void Application::OnKeyEvent(Key key, KeyState newState)
 void Application::Quit()
 {
     VERIFY_EXPR(m_Window != nullptr);
+    EventManager::GetSingleton()->call(VisionEvents::QuitWindowRequest);
     glfwSetWindowShouldClose(m_Window, GLFW_TRUE);
 }
 
@@ -536,7 +555,7 @@ int ApplicationMain(const char* cmdLine)
     }
 #endif
 
-    if (!Samp->CreateWindow(Title.c_str(), 1044, 602, APIHint))
+    if (!Samp->VCreateWindow(Title.c_str(), 1044, 602, APIHint))
         return -1;
 
     if (!Samp->InitEngine(DevType))
