@@ -104,3 +104,16 @@ namespace ColorPresets = DirectX::Colors;
 template <class T>
 using Function = std::function<T>;
 
+#include <variant>
+#include "BasicMath.hpp"
+/// Vector of std::variant of bool, int, char, float, String, Vector2, Vector3, Vector4, Matrix
+typedef Vector<std::variant<bool, int, char, float, String, Diligent::float2, Diligent::float3, Diligent::float4, Diligent::float2x2, Diligent::float3x3, Diligent::float4x4>> VariantVector;
+/// A variant able to hold multiple kinds of data, one at a time.
+using Variant = std::variant<bool, int, char, float, String, Vector<String>, Diligent::float2, Diligent::float3, Diligent::float4, Diligent::float2x2, Diligent::float3x3, Diligent::float4x4, VariantVector>;
+
+/// Extract the value of type TypeName from a Variant
+template <typename P, typename Q>
+P Extract(const Q& v)
+{
+	return std::get<P>(v);
+}
