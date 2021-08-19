@@ -30,7 +30,7 @@ public:
 
     virtual void Start() override {};
     virtual void PreUpdate() override {};
-    virtual void FixedUpdate(float dt = 1.0f / 60.0f) override {};
+    virtual void FixedUpdate(float dt) override {};
     virtual void Update(float deltaMilliseconds) override;
     virtual void PostUpdate() override {};
     virtual void End() override {};

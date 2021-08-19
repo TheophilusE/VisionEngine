@@ -20,6 +20,10 @@ set(ENGINE_HEADERS
     Core/Event/EventManager.h
     
     FrameWork/System.h
+    FrameWork/Scene.h
+    FrameWork/ECS.h
+    FrameWork/Components.h
+    
 )
 
 set(ENGINE_SOURCES
@@ -37,6 +41,10 @@ set(ENGINE_SOURCES
     Core/Event/EventManager.cpp
 
     FrameWork/System.cpp
+    FrameWork/Scene.cpp
+    FrameWork/ECS.cpp
+    FrameWork/Components.cpp
+
 )
 
 if(PLATFORM_MACOS)

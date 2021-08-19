@@ -1,7 +1,10 @@
 #pragma once
 
 #include "../Core/OS/OS.h"
+#include "Scene.h"
 
+namespace Vision
+{
 /// ECS style System interface that allows iterating over components directly.
 class System
 {
@@ -42,12 +45,12 @@ public:
     virtual bool Initialize();
     virtual void setConfig(const SceneSettings& sceneSettings);
 
-    virtual void Start()                              = 0;
-    virtual void PreUpdate()                          = 0;
-    virtual void FixedUpdate(float dt = 1.0f / 60.0f) = 0;
-    virtual void Update(float deltaMilliseconds)      = 0;
-    virtual void PostUpdate()                         = 0;
-    virtual void End()                                = 0;
+    virtual void Start();
+    virtual void PreUpdate();
+    virtual void FixedUpdate(float dt);
+    virtual void Update(float deltaMilliseconds);
+    virtual void PostUpdate();
+    virtual void End();
 
     String             getName() const { return m_SystemName; }
     const UpdateOrder& getUpdateOrder() const { return m_UpdateOrder; }
@@ -57,3 +60,4 @@ public:
 
     virtual void Render();
 };
+}

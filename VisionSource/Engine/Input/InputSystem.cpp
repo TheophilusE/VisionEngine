@@ -7,7 +7,7 @@ namespace Vision
 InputSystem::InputSystem()
     : System("InputSystem", UpdateOrder::Input, true)
 {
-	m_Binder.bind(RootexEvents::WindowResized, this, &InputSystem::windowResized);
+	m_Binder.bind(VisionEvents::WindowResized, this, &InputSystem::windowResized);
 }
 
 Variant InputSystem::windowResized(const Event* event)
