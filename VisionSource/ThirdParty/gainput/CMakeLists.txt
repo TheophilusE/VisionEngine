@@ -6,6 +6,8 @@ add_definitions(-DGAINPUT_BUILD_STATIC=ON)
 add_definitions(-DGAINPUT_LIB_BUILD)
 add_definitions(-DGAINPUT_PLATFORM_WIN)
 
+#set(CMAKE_CXX_STANDARD 17)
+
 add_library(Gainput STATIC ${Gainput} ${GainputH})
 set_property(TARGET Gainput PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 set_target_properties(Gainput PROPERTIES LINKER_LANGUAGE CXX)
