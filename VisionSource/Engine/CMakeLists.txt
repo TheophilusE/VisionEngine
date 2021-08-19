@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 3.8)
 project(VisionEngine CXX)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set(CMAKE_CXX_STANDARD 17)
 
 set(ENGINE_HEADERS
     Application/Application.h
@@ -14,6 +15,9 @@ set(ENGINE_HEADERS
 
     Input/InputListener.h
     Input/InputManager.h
+
+    Core/Event/Event.h
+    Core/Event/EventManager.h
 )
 
 set(ENGINE_SOURCES
@@ -26,6 +30,9 @@ set(ENGINE_SOURCES
 
     Input/InputListener.cpp
     Input/InputManager.cpp
+
+    Core/Event/Event.cpp
+    Core/Event/EventManager.cpp
 )
 
 if(PLATFORM_MACOS)
@@ -44,6 +51,7 @@ target_include_directories(VisionEngine PRIVATE
      ../ThirdParty/entt-3.8.1
      ../ThirdParty/spdlog-1.9.1
      ../ThirdParty/Gainput/include/
+     ../ThirdParty/Gainput/source/
      )
 if(METAL_SUPPORTED)
     target_include_directories(VisionEngine PRIVATE "../../DiligentCorePro")
