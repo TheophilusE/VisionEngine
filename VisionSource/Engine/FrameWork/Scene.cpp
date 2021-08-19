@@ -40,11 +40,13 @@ void Scene::OnComponentAdded(Entity entity, T& component)
 template <>
 void Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
 {
+    VISION_CORE_INFO("Added A Tag Component");
 }
 
 template <>
 void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
 {
+    VISION_CORE_INFO("Added A Transform Component");
 }
 
 } // namespace Vision
