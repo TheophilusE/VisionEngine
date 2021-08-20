@@ -16,6 +16,9 @@ set(SOURCE
     Core/OS/OS.cpp
     Core/OS/Timer.cpp
 
+    Core/Event/Event.cpp
+    Core/Event/EventManager.cpp
+
     ../../DiligentTools/ThirdParty/imgui/imgui_demo.cpp
 )
 
@@ -28,6 +31,9 @@ set(INCLUDE
     Core/OS/Defines.h
     Core/OS/OS.h
     Core/OS/Timer.h
+
+    Core/Event/Event.h
+    Core/Event/EventManager.h
 )
 
 add_subdirectory(ThirdParty/entt-3.8.1)
