@@ -4,6 +4,8 @@
 #include "entt/entt.hpp"
 #include "../Input/InputManager.h"
 
+#define ROOT_SCENE_ID 1
+
 namespace Vision
 {
 class Entity;
@@ -38,6 +40,7 @@ public:
     static void ResetNextID();
 
 	static Ptr<Scene> CreateEmpty();
+    static Ptr<Scene> CreateRootScene();
 
 	static Vector<Scene*> FindScenesByName(const String& name);
 	static Scene* FindSceneByID(const SceneID& id);

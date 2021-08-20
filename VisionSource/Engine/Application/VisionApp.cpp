@@ -40,6 +40,13 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
 
 void VisionApp::UpdateUI()
 {
+      // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+    {
+        ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::End();
+    }
+
 }
 
 void VisionApp::PreUpdate() { ApplicationBase::PreUpdate(); }
@@ -61,6 +68,8 @@ void VisionApp::Update(double CurrTime, double ElapsedTime)
 
 void VisionApp::Render()
 {
+    auto* pRTV = m_pSwapChain->GetCurrentBackBufferRTV();
+    m_pImmediateContext->ClearRenderTarget(pRTV, &m_ClearColor.x, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 }
 
 void VisionApp::PostRender()

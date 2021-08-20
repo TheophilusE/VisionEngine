@@ -28,5 +28,8 @@ public:
 
 private:
     void UpdateUI();
+
+private:
+    float4 m_ClearColor        = {0.45f, 0.55f, 0.60f, 1.00f};
 };
 } // namespace Vision
