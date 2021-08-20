@@ -19,6 +19,12 @@ set(SOURCE
 
     Input/InputListener.cpp
     Input/InputManager.cpp
+    Input/InputSystem.cpp
+
+    FrameWork/System.cpp
+    FrameWork/Scene.cpp
+    FrameWork/ECS.cpp
+    FrameWork/Components.cpp
 
     ../../DiligentTools/ThirdParty/imgui/imgui_demo.cpp
 )
@@ -36,6 +42,12 @@ set(INCLUDE
 
     Input/InputListener.h
     Input/InputManager.h
+    Input/InputSystem.h
+
+    FrameWork/System.h
+    FrameWork/Scene.h
+    FrameWork/ECS.h
+    FrameWork/Components.h
 )
 
 add_subdirectory(ThirdParty/entt-3.8.1)

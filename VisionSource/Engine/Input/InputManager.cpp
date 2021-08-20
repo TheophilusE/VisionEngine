@@ -29,6 +29,7 @@ void InputManager::buildBindings()
 
 	// Condense the scheme stack to reduce redundant work
 	Vector<String> newStack;
+	// Removed refrence auto&
 	for (auto schemeName = m_CurrentSchemeStack.rbegin(); schemeName != m_CurrentSchemeStack.rend(); schemeName++)
 	{
 		if (std::find(newStack.begin(), newStack.end(), *schemeName) == newStack.end())
