@@ -27,6 +27,7 @@ public:
 	void flushSchemes();
 
 	bool Initialize() override;
+	bool initialize(unsigned int Width, unsigned int Height);
 	void setConfig(const SceneSettings& sceneSettings) override;
 	void Update(float deltaMilliseconds) override;
 };

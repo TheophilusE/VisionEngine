@@ -54,6 +54,12 @@ bool InputSystem::Initialize()
 	return true;
 }
 
+bool InputSystem::initialize(unsigned int Width, unsigned int Height)
+{
+	InputManager::GetSingleton()->Initialize(Width, Height);
+	return true;
+}
+
 void InputSystem::setConfig(const SceneSettings& sceneSettings)
 {
 	loadSchemes(sceneSettings.inputSchemes);

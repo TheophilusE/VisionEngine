@@ -1,6 +1,8 @@
 
 #include "ApplicationBase.h"
 
+#include "windows.h"
+
 namespace Vision
 {
 
@@ -37,6 +39,31 @@ void ApplicationBase::Initialize(const SampleInitInfo& InitInfo)
     SampleBase::Initialize(InitInfo);
 
     // Initialize Logger
+    OS::Initialize();
+
+    int Width = 1280;
+    int Height = 1024;
+
+    InputSystem::GetSingleton()->initialize(static_cast<unsigned int>(Width), static_cast<unsigned int>(Height));
+}
+
+void ApplicationBase::HandleWin32Proc(const void* MsgData)
+{
+    struct WindowMessageData
+    {
+        HWND   hWnd;
+        UINT   message;
+        WPARAM wParam;
+        LPARAM lParam;
+    };
+    const WindowMessageData& WndMsg = *reinterpret_cast<const WindowMessageData*>(MsgData);
+
+    auto hWnd   = WndMsg.hWnd;
+    auto uMsg   = WndMsg.message;
+    auto wParam = WndMsg.wParam;
+    auto lParam = WndMsg.lParam;
+
+    InputManager::GetSingleton()->forwardMessage({hWnd, uMsg, wParam, lParam });
 }
 
 void ApplicationBase::PreUpdate()
@@ -50,10 +77,12 @@ void ApplicationBase::FixedUpdate()
 void ApplicationBase::Update(double CurrTime, double ElapsedTime)
 {
     SampleBase::Update(CurrTime, ElapsedTime);
+    InputSystem::GetSingleton()->Update(static_cast<float>(ElapsedTime));
 }
 
 void ApplicationBase::PostUpdate()
 {
+    EventManager::GetSingleton()->dispatchDeferred();
 }
 
 void ApplicationBase::Render()
@@ -72,6 +101,8 @@ void ApplicationBase::WindowResize(Uint32 Width, Uint32 Height)
     // for the new size. This resources are then released by the light scattering object, but
     // not by Intel driver, which results in memory exhaustion.
     m_pImmediateContext->Flush();
+
+    EventManager::GetSingleton()->call(VisionEvents::WindowResized, float2{static_cast<float>(Width), static_cast<float>(Height)});
 }
 
 } // namespace Vision

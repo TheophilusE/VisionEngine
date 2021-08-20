@@ -23,6 +23,9 @@ public:
 
     virtual void WindowResize(Uint32 Width, Uint32 Height) override final;
 
+    HashMap<String, InputScheme> m_InputMap;
+    InputScheme m_InputScheme;
+
 private:
     void UpdateUI();
 };

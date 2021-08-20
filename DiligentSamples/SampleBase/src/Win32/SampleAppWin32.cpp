@@ -281,7 +281,7 @@ protected:
 
     virtual void SelectDeviceType() override final
     {
-        bool OpenDeviceSelector = false;
+        bool OpenDeviceSelector = true;
         if (OpenDeviceSelector)
         {
             DialogBox(NULL, MAKEINTRESOURCE(IDD_DEVICE_TYPE_SELECTION_DIALOG), NULL, SelectDeviceTypeDialogProc);

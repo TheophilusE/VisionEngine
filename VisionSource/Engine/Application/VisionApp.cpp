@@ -20,6 +20,17 @@ VisionApp::~VisionApp()
 void VisionApp::Initialize(const SampleInitInfo& InitInfo)
 {
     ApplicationBase::Initialize(InitInfo);
+
+    InputDescription jump;
+    jump.device = Device::Keyboard;
+    jump.button = 32;
+    jump.inputEvent = "Jump";
+
+    m_InputScheme.bools.push_back(jump);
+
+    m_InputMap.insert(std::pair<String, InputScheme>("DefaultInputScheme", m_InputScheme));
+
+    InputSystem::GetSingleton()->loadSchemes(m_InputMap);
 }
 
 void VisionApp::UpdateUI()
