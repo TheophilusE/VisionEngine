@@ -53,11 +53,17 @@ public:
     ~SampleApp();
     virtual void        ProcessCommandLine(const char* CmdLine) override final;
     virtual const char* GetAppTitle() const override final { return m_AppTitle.c_str(); }
-    virtual void        Update(double CurrTime, double ElapsedTime) override;
-    virtual void        WindowResize(int width, int height) override;
-    virtual void        Render() override;
-    virtual void        Present() override;
-    virtual void        SelectDeviceType(){};
+
+    virtual void PreUpdate() override;
+    virtual void FixedUpdate() override;
+    virtual void Update(double CurrTime, double ElapsedTime) override;
+    virtual void PostUpdate() override;
+    virtual void Render() override;
+    virtual void PostRender() override;
+    virtual void Present() override;
+
+    virtual void WindowResize(int width, int height) override;
+    virtual void SelectDeviceType(){};
 
     virtual void GetDesiredInitialWindowSize(int& width, int& height) override final
     {

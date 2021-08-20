@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "gainput/gainput.h"
+#include <gainput/gainput.h>
 
 #include <functional>
 typedef std::function<bool(int userButton, bool oldValue, bool newValue)> InputBoolListenerFunction;

@@ -70,14 +70,19 @@ public:
 
     virtual void Initialize(const SampleInitInfo& InitInfo) = 0;
 
-    virtual void Render()                                    = 0;
+    virtual void PreUpdate(){};
+    virtual void FixedUpdate(){};
     virtual void Update(double CurrTime, double ElapsedTime) = 0;
+    virtual void PostUpdate(){};
+    virtual void Render() = 0;
+    virtual void PostRender(){};
     virtual void PreWindowResize() {}
     virtual void WindowResize(Uint32 Width, Uint32 Height) {}
     virtual bool HandleNativeMessage(const void* pNativeMsgData) { return false; }
 
-    virtual const Char* GetSampleName() const { return "Diligent Engine Sample"; }
+    virtual const Char* GetSampleName() const { return "Vision Engine Sample"; }
     virtual void        ProcessCommandLine(const char* CmdLine) {}
+    virtual void        HandleWin32Proc(const void* MsgData) {};
 
     InputController& GetInputController()
     {

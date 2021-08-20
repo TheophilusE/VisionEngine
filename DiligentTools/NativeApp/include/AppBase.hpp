@@ -74,6 +74,9 @@ public:
     /// \return     The application title
     virtual const char* GetAppTitle() const = 0;
 
+    virtual void PreUpdate() {};
+
+    virtual void FixedUpdate() {};
 
     /// Updates the application state.
 
@@ -83,6 +86,7 @@ public:
     /// \param [in] ElapsedTime - The time elapsed since the previous frame update.
     virtual void Update(double CurrTime, double ElapsedTime){};
 
+    virtual void PostUpdate() {};
 
     /// Renders the frame.
 
@@ -90,6 +94,7 @@ public:
     /// required to render the frame.
     virtual void Render() = 0;
 
+    virtual void PostRender() {};
 
     /// Presents the frame.
 

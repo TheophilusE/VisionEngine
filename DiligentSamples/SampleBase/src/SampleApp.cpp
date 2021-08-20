@@ -372,8 +372,14 @@ void SampleApp::InitializeDiligentEngine(const NativeWindow* pWindow)
         default: UNEXPECTED("Unknown/unsupported device type");
             // clang-format on
     }
-    m_AppTitle.append(", API ");
-    m_AppTitle.append(std::to_string(DILIGENT_API_VERSION));
+
+    bool ShowApi = false;
+
+    if (ShowApi)
+    {
+        m_AppTitle.append(", API ");
+        m_AppTitle.append(std::to_string(DILIGENT_API_VERSION));
+    }
     m_AppTitle.push_back(')');
 
     m_NumImmediateContexts = NumImmediateContexts;
@@ -768,6 +774,16 @@ void SampleApp::WindowResize(int width, int height)
     }
 }
 
+void SampleApp::PreUpdate()
+{
+    m_TheSample->PreUpdate();
+}
+
+void SampleApp::FixedUpdate()
+{
+    m_TheSample->FixedUpdate();
+}
+
 void SampleApp::Update(double CurrTime, double ElapsedTime)
 {
     m_CurrentTime = CurrTime;
@@ -786,6 +802,11 @@ void SampleApp::Update(double CurrTime, double ElapsedTime)
         m_TheSample->Update(CurrTime, ElapsedTime);
         m_TheSample->GetInputController().ClearState();
     }
+}
+
+void SampleApp::PostUpdate()
+{
+    m_TheSample->PostUpdate();
 }
 
 void SampleApp::Render()
@@ -814,6 +835,11 @@ void SampleApp::Render()
             m_pImGui->EndFrame();
         }
     }
+}
+
+void SampleApp::PostRender()
+{
+    m_TheSample->PostRender();
 }
 
 void SampleApp::CompareGoldenImage(const std::string& FileName, ScreenCapture::CaptureInfo& Capture)

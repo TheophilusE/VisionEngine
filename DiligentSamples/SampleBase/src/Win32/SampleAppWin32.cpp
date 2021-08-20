@@ -35,6 +35,7 @@ namespace
 {
 
 Diligent::RENDER_DEVICE_TYPE g_DeviceType = Diligent::RENDER_DEVICE_TYPE_UNDEFINED;
+Diligent::RENDER_DEVICE_TYPE m_SpecDeviceType = Diligent::RENDER_DEVICE_TYPE_D3D12;
 
 void SetButtonImage(HWND hwndDlg, int buttonId, int imageId, BOOL Enable)
 {
@@ -176,6 +177,8 @@ public:
             WPARAM wParam;
             LPARAM lParam;
         } MsgData = {hWnd, message, wParam, lParam};
+
+        m_TheSample->HandleWin32Proc(&MsgData);
         m_TheSample->GetInputController().HandleNativeMessage(&MsgData);
         return m_TheSample->HandleNativeMessage(&MsgData);
     }
@@ -278,8 +281,16 @@ protected:
 
     virtual void SelectDeviceType() override final
     {
-        DialogBox(NULL, MAKEINTRESOURCE(IDD_DEVICE_TYPE_SELECTION_DIALOG), NULL, SelectDeviceTypeDialogProc);
-        m_DeviceType = g_DeviceType;
+        bool OpenDeviceSelector = false;
+        if (OpenDeviceSelector)
+        {
+            DialogBox(NULL, MAKEINTRESOURCE(IDD_DEVICE_TYPE_SELECTION_DIALOG), NULL, SelectDeviceTypeDialogProc);
+            m_DeviceType = g_DeviceType;
+        }
+        else
+        {
+            m_DeviceType = m_SpecDeviceType;
+        }
     }
 
     bool m_bFullScreenWindow = false;

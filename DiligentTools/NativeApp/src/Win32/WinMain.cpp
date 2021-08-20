@@ -55,9 +55,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
     const auto* AppTitle = g_pTheApp->GetAppTitle();
 
 #ifdef UNICODE
-    const auto* const WindowClassName = L"SampleApp";
+    const auto* const WindowClassName = L"VisionApplication";
 #else
-    const auto* const WindowClassName = "SampleApp";
+    const auto* const WindowClassName = "VisionApplication";
 #endif
 
     // Register our window class
@@ -73,7 +73,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
     LONG WindowHeight = DesiredHeight > 0 ? DesiredHeight : 1024;
     RECT rc           = {0, 0, WindowWidth, WindowHeight};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-    HWND wnd = CreateWindowA("SampleApp", AppTitle,
+    HWND wnd = CreateWindowA("VisionApplication", AppTitle,
                              WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
                              rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, instance, NULL);
     if (!wnd)
@@ -87,12 +87,20 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
     auto GoldenImgMode = g_pTheApp->GetGoldenImageMode();
     if (GoldenImgMode != NativeAppBase::GoldenImageMode::None)
     {
+        g_pTheApp->PreUpdate();
+        g_pTheApp->FixedUpdate();
         g_pTheApp->Update(0, 0);
+        g_pTheApp->PostUpdate();
         g_pTheApp->Render();
+        g_pTheApp->PostRender();
         // Dear imgui windows that don't have initial size are not rendered in the first frame,
         // see https://github.com/ocornut/imgui/issues/2949
+        g_pTheApp->PreUpdate();
+        g_pTheApp->FixedUpdate();
         g_pTheApp->Update(0, 0);
+        g_pTheApp->PostUpdate();
         g_pTheApp->Render();
+        g_pTheApp->PostRender();
         g_pTheApp->Present();
         auto ExitCode = g_pTheApp->GetExitCode();
         g_pTheApp.reset();
@@ -126,9 +134,17 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
 
             if (g_pTheApp->IsReady())
             {
+                g_pTheApp->PreUpdate();
+
+                g_pTheApp->FixedUpdate();
+
                 g_pTheApp->Update(CurrTime, ElapsedTime);
 
+                g_pTheApp->PostUpdate();
+
                 g_pTheApp->Render();
+
+                g_pTheApp->PostRender();
 
                 g_pTheApp->Present();
 
