@@ -13,6 +13,9 @@ set(SOURCE
 
     Input/InputListener.cpp
 
+    Core/OS/OS.cpp
+    Core/OS/Timer.cpp
+
     ../../DiligentTools/ThirdParty/imgui/imgui_demo.cpp
 )
 
@@ -22,7 +25,9 @@ set(INCLUDE
     
     Input/InputListener.h
 
-    ${VINCLUDES}
+    Core/OS/Defines.h
+    Core/OS/OS.h
+    Core/OS/Timer.h
 )
 
 add_subdirectory(ThirdParty/entt-3.8.1)
