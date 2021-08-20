@@ -43,6 +43,8 @@ PRIVATE
     ../../DiligentFX/Shaders/PostProcess/ToneMapping/public/
     ../../DiligentFX/Shaders/Common/public/
     ThirdParty/gainput/lib/include/
+    ThirdParty/entt-3.8.1
+    ThirdParty/spdlog-1.9.1
 )
 
 target_link_libraries(VisionEngine
