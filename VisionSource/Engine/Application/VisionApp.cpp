@@ -1,6 +1,8 @@
 
 #include "VisionApp.h"
 
+#include "imgui.h"
+
 namespace Diligent
 {
 SampleBase* CreateSample()
@@ -22,8 +24,8 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
     ApplicationBase::Initialize(InitInfo);
 
     InputDescription jump;
-    jump.device = Device::Keyboard;
-    jump.button = 32;
+    jump.device     = Device::Keyboard;
+    jump.button     = 32;
     jump.inputEvent = "Jump";
 
     m_InputScheme.bools.push_back(jump);
@@ -31,6 +33,9 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
     m_InputMap.insert(std::pair<String, InputScheme>("DefaultInputScheme", m_InputScheme));
 
     InputSystem::GetSingleton()->loadSchemes(m_InputMap);
+    InputSystem::GetSingleton()->pushScheme("DefaultInputScheme");
+
+    InputManager::GetSingleton()->setEnabled(true);
 }
 
 void VisionApp::UpdateUI()
@@ -45,6 +50,13 @@ void VisionApp::Update(double CurrTime, double ElapsedTime)
 {
     ApplicationBase::Update(CurrTime, ElapsedTime);
     UpdateUI();
+
+    
+    if (InputManager::GetSingleton()->isPressed("Jump"))
+    {
+        //VISION_INFO("Jump Pressed!");
+    }
+    
 }
 
 void VisionApp::Render()
@@ -53,7 +65,6 @@ void VisionApp::Render()
 
 void VisionApp::PostRender()
 {
-    
 }
 
 void VisionApp::WindowResize(Uint32 Width, Uint32 Height)
