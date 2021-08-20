@@ -11,13 +11,14 @@ set(SOURCE
     Application/ApplicationBase.cpp
     Application/VisionApp.cpp
 
-    Input/InputListener.cpp
-
     Core/OS/OS.cpp
     Core/OS/Timer.cpp
 
     Core/Event/Event.cpp
     Core/Event/EventManager.cpp
+
+    Input/InputListener.cpp
+    Input/InputManager.cpp
 
     ../../DiligentTools/ThirdParty/imgui/imgui_demo.cpp
 )
@@ -26,14 +27,15 @@ set(INCLUDE
     Application/ApplicationBase.h
     Application/VisionApp.h
     
-    Input/InputListener.h
-
     Core/OS/Defines.h
     Core/OS/OS.h
     Core/OS/Timer.h
 
     Core/Event/Event.h
     Core/Event/EventManager.h
+
+    Input/InputListener.h
+    Input/InputManager.h
 )
 
 add_subdirectory(ThirdParty/entt-3.8.1)
