@@ -28,6 +28,7 @@ public:
 
 	bool Initialize() override;
 	bool initialize(unsigned int Width, unsigned int Height);
+	bool initialize(const JSON::json& systemData);
 	void setConfig(const SceneSettings& sceneSettings) override;
 	void Update(float deltaMilliseconds) override;
 };

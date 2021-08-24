@@ -1,16 +1,24 @@
 
 #pragma once
 
+#include <filesystem>
+#include <fstream>
+#include <chrono>
+
 #include "Defines.h"
 #include "spdlog/spdlog.h"
 
 namespace Vision
 {
 
+typedef Vector<char> FileBuffer;
+typedef std::chrono::time_point<std::filesystem::file_time_type::clock> FileTimePoint;
+
 class OS
 {
 public:
     static void Initialize();
+	static void RunApplication();
 
     inline static Ref<spdlog::logger>& GetCoreLogger() { return s_CoreLogger; }
     inline static Ref<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
@@ -27,6 +35,13 @@ public:
 	int GetRevision();
 
 	const char* GetVersionString();
+
+	static String GetBuildDate();
+	static String GetBuildTime();
+	static String GetBuildType();
+	static String GetOrganizationName();
+
+	static String GetAppDataFolder();
 
 private:
     static Ref<spdlog::logger> s_CoreLogger;

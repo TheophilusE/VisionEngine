@@ -30,6 +30,8 @@ set(SOURCE
     FrameWork/ECS.cpp
     FrameWork/Components.cpp
 
+    Render/Renderer.cpp
+
     ../../DiligentTools/ThirdParty/imgui/imgui_demo.cpp
 )
 
@@ -52,6 +54,8 @@ set(INCLUDE
     FrameWork/Scene.h
     FrameWork/ECS.h
     FrameWork/Components.h
+
+    Render/Renderer.h
 )
 
 add_subdirectory(ThirdParty/entt-3.8.1)

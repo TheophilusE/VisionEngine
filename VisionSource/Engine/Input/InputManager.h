@@ -36,11 +36,17 @@ struct InputDescription
 	Event::Type inputEvent;
 };
 
+void TO_JSON(JSON::json& j, const InputDescription& s);
+void FROM_JSON(const JSON::json& j, InputDescription& s);
+
 struct InputScheme
 {
 	Vector<InputDescription> bools;
 	Vector<InputDescription> floats;
 };
+
+void TO_JSON(JSON::json& j, const InputScheme& s);
+void FROM_JSON(const JSON::json& j, InputScheme& s);
 
 /// Allows interfacing to game controlling hardware, including mouse, keyboard and XInput controllers.
 /// Allows detecting inputs through Event dispatch.

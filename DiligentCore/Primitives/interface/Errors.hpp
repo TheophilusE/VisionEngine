@@ -64,7 +64,7 @@ void LogError(bool IsFatal, const char* Function, const char* FullFilePath, int 
     else
     {
         // No callback set - output to cerr
-        std::cerr << "Diligent Engine: " << (IsFatal ? "Fatal Error" : "Error") << " in " << Function << "() (" << FileName << ", " << Line << "): " << Msg << '\n';
+        std::cerr << "Vision Engine: " << (IsFatal ? "Fatal Error" : "Error") << " in " << Function << "() (" << FileName << ", " << Line << "): " << Msg << '\n';
     }
     ThrowIf<bThrowException>(std::move(Msg));
 }
