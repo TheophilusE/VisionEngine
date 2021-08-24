@@ -7,6 +7,10 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Typically you don't care so much for a third party library's tests to be
+# run from your own project's code.
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+
 set(SOURCE
     Application/ApplicationBase.cpp
     Application/VisionApp.cpp
@@ -54,6 +58,7 @@ add_subdirectory(ThirdParty/entt-3.8.1)
 add_subdirectory(ThirdParty/Gainput)
 add_subdirectory(ThirdParty/spdlog-1.9.1)
 #add_subdirectory(ThirdParty/eigen-3.4-rc1)
+add_subdirectory(ThirdParty/json)
 
 set(SHADERS
 )
@@ -82,4 +87,5 @@ PRIVATE
     EnTT
     spdlog
     gainputstatic
+    nlohmann_json::nlohmann_json
 )
