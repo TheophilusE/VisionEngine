@@ -36,6 +36,8 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
     InputSystem::GetSingleton()->pushScheme("DefaultInputScheme");
 
     InputManager::GetSingleton()->setEnabled(true);
+
+    
 }
 
 void VisionApp::UpdateUI()
