@@ -58,7 +58,8 @@ void VisionApp::Update(double CurrTime, double ElapsedTime)
     ApplicationBase::Update(CurrTime, ElapsedTime);
     UpdateUI();
 
-    
+    //InputManager::GetSingleton()->getMouse()->GetState().
+
     if (InputManager::GetSingleton()->isPressed("Jump"))
     {
         //VISION_INFO("Jump Pressed!");

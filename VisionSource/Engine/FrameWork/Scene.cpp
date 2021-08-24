@@ -1,6 +1,4 @@
 
-#pragma once
-
 #include "Scene.h"
 #include "ECS.h"
 #include "Components.h"
