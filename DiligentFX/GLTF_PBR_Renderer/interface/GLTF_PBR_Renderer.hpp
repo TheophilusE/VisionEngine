@@ -105,8 +105,6 @@ public:
     };
 
     /// Initializes the renderer
-
-    GLTF_PBR_Renderer() {}
     GLTF_PBR_Renderer(IRenderDevice*    pDevice,
                       IDeviceContext*   pCtx,
                       const CreateInfo& CI);

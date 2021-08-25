@@ -18,6 +18,7 @@
 #include "TextureUtilities.h"
 #include "CommonlyUsedStates.h"
 #include "ShaderMacroHelper.hpp"
+#include "../Render/Renderer.h"
 
 namespace Vision
 {
@@ -54,6 +55,24 @@ struct TransformComponent
     }
 };
 
+struct BoundingBoxComponent
+{
+    BoundingBoxComponent()                            = default;
+    BoundingBoxComponent(const BoundingBoxComponent&) = default;
+
+    enum class BoundBoxMode : int
+    {
+        None = 0,
+        Local,
+        Global
+    };
+    BoundBoxMode                          m_BoundBoxMode = BoundBoxMode::None;
+    RefCntAutoPtr<IPipelineState>         m_BoundBoxPSO;
+    RefCntAutoPtr<IShaderResourceBinding> m_BoundBoxSRB;
+
+    void CreateBoundBoxPSO(TEXTURE_FORMAT RTVFmt, TEXTURE_FORMAT DSVFmt, Renderer& renderer);
+};
+
 struct DirectionalLightComponent
 {
     DirectionalLightComponent()                                 = default;
@@ -85,6 +104,23 @@ struct MeshComponent
 {
     MeshComponent()                     = default;
     MeshComponent(const MeshComponent&) = default;
+
+    void LoadModel(const char* Path, Renderer& renderer);
+
+    Ptr<GLTF::Model>                         m_Model;
+    GLTF_PBR_Renderer::RenderInfo            m_RenderParams;
+    GLTF_PBR_Renderer::ModelResourceBindings m_ModelResourceBindings;
+    GLTF_PBR_Renderer::ResourceCacheBindings m_CacheBindings;
+
+    bool                                 m_PlayAnimation  = false;
+    int                                  m_AnimationIndex = 0;
+    Vector<float>                        m_AnimationTimers;
+    bool                                 m_bUseResourceCache = false;
+    RefCntAutoPtr<GLTF::ResourceManager> m_pResourceMgr;
+    GLTF::ResourceCacheUseInfo           m_CacheUseInfo;
+
+    Uint32                           m_CameraId = 0;
+    std::vector<const GLTF::Camera*> m_Cameras;
 };
 
 } // namespace Vision

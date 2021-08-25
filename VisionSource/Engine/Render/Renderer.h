@@ -6,7 +6,6 @@
 #include "BasicMath.hpp"
 
 #include "../FrameWork/Scene.h"
-#include "../FrameWork/Components.h"
 
 namespace Vision
 {
@@ -20,10 +19,20 @@ struct RenderSettings
 class Renderer
 {
 public:
-    void Initialize(IEngineFactory* pEF, IRenderDevice* pD, IDeviceContext* pC, ISwapChain* pS);
-    void CreateEnvMapPSO();
-    void CreateEnvMapSRB();
-    void Render();
+    void                                     Initialize(IEngineFactory* pEF, IRenderDevice* pD, IDeviceContext* pC, ISwapChain* pS);
+    void                                     CreateEnvMapPSO();
+    void                                     CreateEnvMapSRB();
+    void                                     Render();
+    GLTF_PBR_Renderer::ModelResourceBindings CreateResourceBindings(GLTF::Model& GLTFModel,
+                                                                    IBuffer*     pCameraAttribs,
+                                                                    IBuffer*     pLightAttribs);
+
+    IEngineFactory*        GetEngineFactory() { return pEngineFactory; }
+    IRenderDevice*         GetRenderDevice() { return pDevice; }
+    IDeviceContext*        GetDeviceContext() { return pContext; }
+    ISwapChain*            GetSwapChain() { return pSwapChain; }
+    RefCntAutoPtr<IBuffer> GetCamAttribs() { return m_CameraAttribsCB; }
+    RefCntAutoPtr<IBuffer> GetLightAttribs() { return m_LightAttribsCB; }
 
     enum class BackgroundMode : int
     {
@@ -36,7 +45,7 @@ public:
 
 protected:
     GLTF_PBR_Renderer::RenderInfo         m_RenderParams;
-    std::unique_ptr<GLTF_PBR_Renderer>    m_GLTFRenderer;
+    Ptr<GLTF_PBR_Renderer>                m_GLTFRenderer;
     RefCntAutoPtr<IPipelineState>         m_EnvMapPSO;
     RefCntAutoPtr<IShaderResourceBinding> m_EnvMapSRB;
     RefCntAutoPtr<ITextureView>           m_EnvironmentMapSRV;
@@ -44,7 +53,7 @@ protected:
 
     RefCntAutoPtr<IBuffer> m_CameraAttribsCB;
     RefCntAutoPtr<IBuffer> m_LightAttribsCB;
-    RenderSettings m_RenderSettings;
+    RenderSettings         m_RenderSettings;
 
     bool                                 m_bUseResourceCache = false;
     RefCntAutoPtr<GLTF::ResourceManager> m_pResourceMgr;

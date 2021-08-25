@@ -110,6 +110,12 @@ void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformCompone
 }
 
 template <>
+void Scene::OnComponentAdded<BoundingBoxComponent>(Entity entity, BoundingBoxComponent& component)
+{
+    VISION_CORE_INFO("Added A Bounding Box Component");
+}
+
+template <>
 void Scene::OnComponentAdded<DirectionalLightComponent>(Entity entity, DirectionalLightComponent& component)
 {
     VISION_CORE_INFO("Added A Directional Light Component");

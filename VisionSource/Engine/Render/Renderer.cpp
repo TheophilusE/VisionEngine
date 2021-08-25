@@ -9,6 +9,7 @@
 #include "FileSystem.hpp"
 
 #include "../Core/OS/OS.h"
+#include "../FrameWork/Components.h"
 
 namespace Vision
 {
@@ -77,7 +78,7 @@ void Renderer::Initialize(IEngineFactory* pEF, IRenderDevice* pD, IDeviceContext
 
     CreateEnvMapPSO();
 
-    // Set scene settings 
+    // Set scene settings
     m_BackgroundMode = BackgroundMode::EnvironmentMap;
 }
 
@@ -240,4 +241,12 @@ void Renderer::Render()
         pContext->Draw(drawAttribs);
     }
 }
+
+GLTF_PBR_Renderer::ModelResourceBindings Renderer::CreateResourceBindings(GLTF::Model& GLTFModel,
+                                                                IBuffer*     pCameraAttribs,
+                                                                IBuffer*     pLightAttribs)
+{
+    return m_GLTFRenderer->CreateResourceBindings(GLTFModel, pCameraAttribs, pLightAttribs);
+}
+
 } // namespace Vision
