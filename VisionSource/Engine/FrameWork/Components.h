@@ -2,8 +2,27 @@
 #pragma once
 #include "../Core/OS/OS.h"
 
+#include <vector>
+
+#include "FirstPersonCamera.hpp"
+
+#include "FileSystem.hpp"
+#include "GraphicsUtilities.h"
+#include "GLTFLoader.hpp"
+#include "GLTF_PBR_Renderer.hpp"
+#include "MapHelper.hpp"
+#include "EpipolarLightScattering.hpp"
+#include "ShadowMapManager.hpp"
+#include "Shaders/Common/public/BasicStructures.fxh"
+#include "Shaders/PostProcess/ToneMapping/public/ToneMappingStructures.fxh"
+#include "TextureUtilities.h"
+#include "CommonlyUsedStates.h"
+#include "ShaderMacroHelper.hpp"
+
 namespace Vision
 {
+using namespace Diligent;
+
 struct TagComponent
 {
     String Tag;
@@ -35,4 +54,37 @@ struct TransformComponent
     }
 };
 
-}
+struct DirectionalLightComponent
+{
+    DirectionalLightComponent()                                 = default;
+    DirectionalLightComponent(const DirectionalLightComponent&) = default;
+
+    float3 m_LightDirection = {-0.554699242f, -0.0599640049f, -0.829887390f};
+    float4 m_LightColor     = float4(1, 1, 1, 1);
+    float  m_LightIntensity = 3.f;
+
+    RefCntAutoPtr<IBuffer> m_LightAttribsCB;
+
+    float4 GetIntensity()
+    {
+        return m_LightColor * m_LightIntensity;
+    }
+};
+
+struct CameraComponent
+{
+    CameraComponent()                       = default;
+    CameraComponent(const CameraComponent&) = default;
+
+    bool                   Active = true;
+    FirstPersonCamera      m_Camera;
+    RefCntAutoPtr<IBuffer> m_pcbCameraAttribs;
+};
+
+struct MeshComponent
+{
+    MeshComponent()                     = default;
+    MeshComponent(const MeshComponent&) = default;
+};
+
+} // namespace Vision

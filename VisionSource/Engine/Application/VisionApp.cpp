@@ -37,18 +37,39 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
 
     InputManager::GetSingleton()->setEnabled(true);
 
-    
+    auto BackBufferFmt  = m_pSwapChain->GetDesc().ColorBufferFormat;
+    auto DepthBufferFmt = m_pSwapChain->GetDesc().DepthBufferFormat;
+
+    GLTF_PBR_Renderer::CreateInfo RendererCI;
+    RendererCI.RTVFmt          = BackBufferFmt;
+    RendererCI.DSVFmt          = DepthBufferFmt;
+    RendererCI.AllowDebugView  = true;
+    RendererCI.UseIBL          = true;
+    RendererCI.FrontCCW        = true;
+    RendererCI.UseTextureAtlas = false; // Use Resource Cache
+    m_Renderer.reset(new Renderer(m_pDevice, m_pImmediateContext, RendererCI));
+
+    m_Renderer->pEngineFactory = m_pEngineFactory;
+    m_Renderer->pDevice        = m_pDevice;
+    m_Renderer->pContext       = m_pImmediateContext;
+    m_Renderer->pSwapChain     = m_pSwapChain;
+    m_Renderer->Initialize();
+
+    m_Camera = m_Scene->CreateEntity("Camera Component");
+    m_DirectionalLight = m_Scene->CreateEntity("Directional Light Component");
+
+    m_DirectionalLight.AddComponent<DirectionalLightComponent>();
+    m_Camera.AddComponent<CameraComponent>();
 }
 
 void VisionApp::UpdateUI()
 {
-      // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+    // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
     {
         ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
     }
-
 }
 
 void VisionApp::PreUpdate() { ApplicationBase::PreUpdate(); }
@@ -66,13 +87,11 @@ void VisionApp::Update(double CurrTime, double ElapsedTime)
     {
         //VISION_INFO("Jump Pressed!");
     }
-    
 }
 
 void VisionApp::Render()
 {
-    auto* pRTV = m_pSwapChain->GetCurrentBackBufferRTV();
-    m_pImmediateContext->ClearRenderTarget(pRTV, &m_ClearColor.x, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+    m_Renderer->Render();
 }
 
 void VisionApp::PostRender()
@@ -83,11 +102,6 @@ void VisionApp::WindowResize(Uint32 Width, Uint32 Height)
 {
     // Call atmo resize here
 
-    // Flush is required because Intel driver does not release resources until
-    // command buffer is flushed. When window is resized, WindowResize() is called for
-    // every intermediate window size, and light scattering object creates resources
-    // for the new size. This resources are then released by the light scattering object, but
-    // not by Intel driver, which results in memory exhaustion.
-    m_pImmediateContext->Flush();
+    ApplicationBase::WindowResize(Width, Height);
 }
 } // namespace Vision

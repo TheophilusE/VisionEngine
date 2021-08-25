@@ -5,6 +5,7 @@
 
 #include "../FrameWork/ECS.h"
 #include "../FrameWork/Components.h"
+#include "../Render/Renderer.h"
 
 namespace Vision
 {
@@ -27,15 +28,17 @@ public:
     virtual void WindowResize(Uint32 Width, Uint32 Height) override final;
 
     HashMap<String, InputScheme> m_InputMap;
-    InputScheme m_InputScheme;
+    InputScheme                  m_InputScheme;
 
 private:
     void UpdateUI();
 
 private:
-    float4 m_ClearColor        = {0.45f, 0.55f, 0.60f, 1.00f};
+    Ptr<Renderer> m_Renderer;
+    Ptr<Scene>    m_Scene = Scene::Create();
 
-    Scene m_Scene;
+    Entity m_Camera;
+    Entity m_DirectionalLight;
 
 };
 } // namespace Vision

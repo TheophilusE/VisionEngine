@@ -40,6 +40,7 @@ public:
     static void ResetNextID();
 
 	static Ptr<Scene> CreateEmpty();
+    static Ptr<Scene> Create();
     static Ptr<Scene> CreateRootScene();
 
 	static Vector<Scene*> FindScenesByName(const String& name);
@@ -64,6 +65,7 @@ public:
 	const String& getName() const { return m_Name; }
 	const String& getFullName() const { return m_FullName; }
 	SceneSettings& getSettings() { return m_Settings; }
+    entt::registry& GetSceneRegistry() { return m_Registry; }
 
 private:
     template <typename T>
