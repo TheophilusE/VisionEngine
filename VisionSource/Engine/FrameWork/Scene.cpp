@@ -58,6 +58,8 @@ Entity Scene::CreateEntity(const String& name)
     Entity entity = {m_Registry.create(), this};
     entity.AddComponent<TransformComponent>(); // Add default transform component
 
+    entity.AddComponent<BoundingBoxComponent>(); // Add Bounding Box Component
+
     auto& tag = entity.AddComponent<TagComponent>();
     tag.Tag   = name.empty() ? "Entity" : name; // Set entity tag
 
@@ -70,14 +72,117 @@ void Scene::DestroyEntity(Entity entity)
     m_Registry.destroy(entity);
 }
 
-void Scene::Update(Diligent::InputController& controller, float dt)
+void GetRaySphereIntersection(float3        f3RayOrigin,
+                              const float3& f3RayDirection,
+                              const float3& f3SphereCenter,
+                              float         fSphereRadius,
+                              float2&       f2Intersections)
 {
+    // http://wiki.cgsociety.org/index.php/Ray_Sphere_Intersection
+    f3RayOrigin -= f3SphereCenter;
+    float A = dot(f3RayDirection, f3RayDirection);
+    float B = 2 * dot(f3RayOrigin, f3RayDirection);
+    float C = dot(f3RayOrigin, f3RayOrigin) - fSphereRadius * fSphereRadius;
+    float D = B * B - 4 * A * C;
+    // If discriminant is negative, there are no real roots hence the ray misses the
+    // sphere
+    if (D < 0)
+    {
+        f2Intersections = float2(-1, -1);
+    }
+    else
+    {
+        D = sqrt(D);
+
+        f2Intersections = float2(-B - D, -B + D) / (2 * A); // A must be positive here!!
+    }
+}
+
+void ComputeApproximateNearFarPlaneDist(const float3&   CameraPos,
+                                        const float4x4& ViewMatr,
+                                        const float4x4& ProjMatr,
+                                        const float3&   EarthCenter,
+                                        float           fEarthRadius,
+                                        float           fMinRadius,
+                                        float           fMaxRadius,
+                                        float&          fNearPlaneZ,
+                                        float&          fFarPlaneZ)
+{
+    float4x4 ViewProjMatr = ViewMatr * ProjMatr;
+    float4x4 ViewProjInv  = ViewProjMatr.Inverse();
+
+    // Compute maximum view distance for the current camera altitude
+    float3 f3CameraGlobalPos   = CameraPos - EarthCenter;
+    float  fCameraElevationSqr = dot(f3CameraGlobalPos, f3CameraGlobalPos);
+    float  fMaxViewDistance =
+        (float)(sqrt((double)fCameraElevationSqr - (double)fEarthRadius * fEarthRadius) +
+                sqrt((double)fMaxRadius * fMaxRadius - (double)fEarthRadius * fEarthRadius));
+    float fCameraElev = sqrt(fCameraElevationSqr);
+
+    fNearPlaneZ = 50.f;
+    if (fCameraElev > fMaxRadius)
+    {
+        // Adjust near clipping plane
+        fNearPlaneZ = (fCameraElev - fMaxRadius) / sqrt(1 + 1.f / (ProjMatr._11 * ProjMatr._11) + 1.f / (ProjMatr._22 * ProjMatr._22));
+    }
+
+    fNearPlaneZ = std::max(fNearPlaneZ, 50.f);
+    fFarPlaneZ  = 1000;
+
+    const int iNumTestDirections = 5;
+    for (int i = 0; i < iNumTestDirections; ++i)
+    {
+        for (int j = 0; j < iNumTestDirections; ++j)
+        {
+            float3 PosPS, PosWS, DirFromCamera;
+            PosPS.x = (float)i / (float)(iNumTestDirections - 1) * 2.f - 1.f;
+            PosPS.y = (float)j / (float)(iNumTestDirections - 1) * 2.f - 1.f;
+            PosPS.z = 0; // Far plane is at 0 in complimentary depth buffer
+            PosWS   = PosPS * ViewProjInv;
+
+            DirFromCamera = PosWS - CameraPos;
+            DirFromCamera = normalize(DirFromCamera);
+
+            float2 IsecsWithBottomBoundSphere;
+            GetRaySphereIntersection(CameraPos, DirFromCamera, EarthCenter, fMinRadius, IsecsWithBottomBoundSphere);
+
+            float fNearIsecWithBottomSphere = IsecsWithBottomBoundSphere.x > 0 ? IsecsWithBottomBoundSphere.x : IsecsWithBottomBoundSphere.y;
+            if (fNearIsecWithBottomSphere > 0)
+            {
+                // The ray hits the Earth. Use hit point to compute camera space Z
+                float3 HitPointWS = CameraPos + DirFromCamera * fNearIsecWithBottomSphere;
+                float3 HitPointCamSpace;
+                HitPointCamSpace = HitPointWS * ViewMatr;
+                fFarPlaneZ       = std::max(fFarPlaneZ, HitPointCamSpace.z);
+            }
+            else
+            {
+                // The ray misses the Earth. In that case the whole earth could be seen
+                fFarPlaneZ = fMaxViewDistance;
+            }
+        }
+    }
+}
+
+void Scene::Update(Diligent::InputController& controller, IRenderDevice* pDevice, ISwapChain* pSwapChain, float dt)
+{
+    const auto& SCDesc = pSwapChain->GetDesc();
+    // Set world/view/proj matrices and global shader constants
+    float aspectRatio   = (float)SCDesc.Width / SCDesc.Height;
+    bool  m_bIsGLDevice = pDevice->GetDeviceInfo().IsGLDevice();
+
+    // This projection matrix is only used to set up directions in view frustum
+    // Actual near and far planes are ignored
+    float    FOV      = PI_F / 4.f;
+    float4x4 mTmpProj = float4x4::Projection(FOV, aspectRatio, 50.f, 500000.f, m_bIsGLDevice);
+
     auto& scenes = Scene::FindAllScenes();
 
     for (int i = 0; i < scenes.size(); ++i)
     {
         auto& pRegistry  = scenes[i]->GetSceneRegistry();
         auto  viewCamera = pRegistry.view<CameraComponent>();
+        auto  viewModel  = pRegistry.view<MeshComponent>();
 
         // Update Camera
         for (auto entity : viewCamera)
@@ -86,6 +191,41 @@ void Scene::Update(Diligent::InputController& controller, float dt)
             if (camera.Active)
             {
                 camera.m_Camera.Update(controller, dt);
+
+                float  fEarthRadius = AirScatteringAttribs().fEarthRadius;
+                float3 EarthCenter(0, -fEarthRadius, 0);
+                float  fNearPlaneZ, fFarPlaneZ;
+                float  m_fMinElevation = 0.0f;
+                float  m_fMaxElevation = 0.0f;
+
+                ComputeApproximateNearFarPlaneDist(camera.m_Camera.GetPos(),
+                                                   camera.m_Camera.GetViewMatrix(),
+                                                   mTmpProj,
+                                                   EarthCenter,
+                                                   fEarthRadius,
+                                                   fEarthRadius + m_fMinElevation,
+                                                   fEarthRadius + m_fMaxElevation,
+                                                   fNearPlaneZ,
+                                                   fFarPlaneZ);
+                fNearPlaneZ = std::max(fNearPlaneZ, 50.f) * 0.1f;
+                fFarPlaneZ  = std::max(fFarPlaneZ, fNearPlaneZ + 100.f);
+                fFarPlaneZ  = std::max(fFarPlaneZ, 1000.f);
+
+                camera.m_Camera.SetProjAttribs(fNearPlaneZ, fFarPlaneZ, aspectRatio, FOV, SURFACE_TRANSFORM_IDENTITY, m_bIsGLDevice);
+            }
+        }
+
+        // Update model
+        for (auto entity : viewModel)
+        {
+            auto& model = viewModel.get<MeshComponent>(entity);
+
+            if (!model.m_Model->Animations.empty() && model.m_PlayAnimation)
+            {
+                float& AnimationTimer = model.m_AnimationTimers[model.m_AnimationIndex];
+                AnimationTimer += dt;
+                AnimationTimer = std::fmod(AnimationTimer, model.m_Model->Animations[model.m_AnimationIndex].End);
+                model.m_Model->UpdateAnimation(model.m_AnimationIndex, AnimationTimer);
             }
         }
     }

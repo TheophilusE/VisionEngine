@@ -40,5 +40,7 @@ private:
     Entity m_Camera;
     Entity m_DirectionalLight;
 
+    Entity m_Helmet;
+
 };
 } // namespace Vision

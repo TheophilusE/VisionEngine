@@ -103,9 +103,10 @@ struct CameraComponent
 struct MeshComponent
 {
     MeshComponent()                     = default;
-    MeshComponent(const MeshComponent&) = default;
+    //MeshComponent(const MeshComponent&) = default;
 
     void LoadModel(const char* Path, Renderer& renderer);
+    void CreateGLTFResourceCache(Renderer& renderer);
 
     Ptr<GLTF::Model>                         m_Model;
     GLTF_PBR_Renderer::RenderInfo            m_RenderParams;

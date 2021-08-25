@@ -4,11 +4,14 @@
 #include "entt/entt.hpp"
 #include "../Input/InputManager.h"
 #include "InputController.hpp"
+#include "GLTFLoader.hpp"
+#include "GLTF_PBR_Renderer.hpp"
 
 #define ROOT_SCENE_ID 1
 
 namespace Vision
 {
+using namespace Diligent;
 class Entity;
 typedef unsigned int SceneID;
 
@@ -36,7 +39,7 @@ public:
     Entity CreateEntity(const String& name = String());
     void   DestroyEntity(Entity entity);
 
-    void Update(Diligent::InputController& controller, float dt);
+    void Update(Diligent::InputController& controller, IRenderDevice* pDevice, ISwapChain* pSwapChain, float dt);
 
     static void ResetNextID();
 

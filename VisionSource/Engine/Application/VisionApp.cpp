@@ -41,9 +41,13 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
 
     m_Camera = m_Scene->CreateEntity("Camera Component");
     m_DirectionalLight = m_Scene->CreateEntity("Directional Light Component");
+    m_Helmet = m_Scene->CreateEntity("Helmet");
 
     m_DirectionalLight.AddComponent<DirectionalLightComponent>();
     m_Camera.AddComponent<CameraComponent>();
+    auto& m = m_Helmet.AddComponent<MeshComponent>();
+    m.LoadModel("models/DamagedHelmet/DamagedHelmet.gltf", m_Renderer);
+    
 }
 
 void VisionApp::UpdateUI()
@@ -65,7 +69,7 @@ void VisionApp::Update(double CurrTime, double ElapsedTime)
     ApplicationBase::Update(CurrTime, ElapsedTime);
     UpdateUI();
 
-    m_Scene->Update(m_InputController, static_cast<float>(ElapsedTime));
+    m_Scene->Update(m_InputController, m_Renderer.GetRenderDevice(), m_Renderer.GetSwapChain(), static_cast<float>(ElapsedTime));
 }
 
 void VisionApp::Render()

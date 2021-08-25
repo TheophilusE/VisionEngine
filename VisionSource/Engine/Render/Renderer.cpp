@@ -180,8 +180,9 @@ void Renderer::CreateEnvMapSRB()
 
 void Renderer::Render()
 {
-    auto* pRTV = pSwapChain->GetCurrentBackBufferRTV();
-    auto* pDSV = pSwapChain->GetDepthBufferDSV();
+    auto* pRTV          = pSwapChain->GetCurrentBackBufferRTV();
+    auto* pDSV          = pSwapChain->GetDepthBufferDSV();
+    bool  m_bIsGLDevice = pDevice->GetDeviceInfo().IsGLDevice();
     // Clear the back buffer
     const float ClearColor[] = {0.032f, 0.032f, 0.032f, 1.0f};
     pContext->ClearRenderTarget(pRTV, ClearColor, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
@@ -194,6 +195,7 @@ void Renderer::Render()
         auto& pRegistry            = scenes[i]->GetSceneRegistry();
         auto  viewDirectionalLight = pRegistry.view<DirectionalLightComponent>();
         auto  viewCamera           = pRegistry.view<CameraComponent>();
+        auto  viewModel            = pRegistry.view<MeshComponent>();
 
         // Render Camera
         for (auto entity : viewCamera)
@@ -201,11 +203,37 @@ void Renderer::Render()
             auto& camera = viewCamera.get<CameraComponent>(entity);
             if (camera.Active)
             {
-                MapHelper<CameraAttribs> CamAttribs(pContext, m_CameraAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
-                CamAttribs->mProjT        = camera.m_Camera.GetProjMatrix().Transpose();
-                CamAttribs->mViewProjT    = camera.m_Camera.GetViewMatrix().Transpose();
-                CamAttribs->mViewProjInvT = camera.m_Camera.GetViewMatrix().Inverse().Transpose();
-                CamAttribs->f4Position    = float4(camera.m_Camera.GetPos(), 1);
+                //MapHelper<CameraAttribs> CamAttribs(pContext, m_CameraAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
+                //CamAttribs->mProjT        = camera.m_Camera.GetProjMatrix().Transpose();
+                //CamAttribs->mViewProjT    = camera.m_Camera.GetViewMatrix().Transpose();
+                //CamAttribs->mViewProjInvT = camera.m_Camera.GetViewMatrix().Inverse().Transpose();
+                //CamAttribs->f4Position    = float4(camera.m_Camera.GetPos(), 1);
+
+                float4x4 mViewProj = camera.m_Camera.GetViewMatrix() * camera.m_Camera.GetProjMatrix();
+
+                CameraAttribs CameraAttribsB;
+                CameraAttribsB.mViewT        = camera.m_Camera.GetViewMatrix().Transpose();
+                CameraAttribsB.mProjT        = camera.m_Camera.GetProjMatrix().Transpose();
+                CameraAttribsB.mViewProjT    = mViewProj.Transpose();
+                CameraAttribsB.mViewProjInvT = mViewProj.Inverse().Transpose();
+                float fNearPlane = 0.f, fFarPlane = 0.f;
+                camera.m_Camera.GetProjMatrix().GetNearFarClipPlanes(fNearPlane, fFarPlane, m_bIsGLDevice);
+                CameraAttribsB.fNearPlaneZ      = fNearPlane;
+                CameraAttribsB.fFarPlaneZ       = fFarPlane * 0.999999f;
+                CameraAttribsB.f4Position       = camera.m_Camera.GetPos();
+                CameraAttribsB.f4ViewportSize.x = static_cast<float>(pSwapChain->GetDesc().Width);
+                CameraAttribsB.f4ViewportSize.y = static_cast<float>(pSwapChain->GetDesc().Height);
+                CameraAttribsB.f4ViewportSize.z = 1.f / CameraAttribsB.f4ViewportSize.x;
+                CameraAttribsB.f4ViewportSize.w = 1.f / CameraAttribsB.f4ViewportSize.y;
+
+                {
+                    //MapHelper<CameraAttribs> CamAttribsCBData(pContext, camera.m_pcbCameraAttribs, MAP_WRITE, MAP_FLAG_DISCARD);
+                    //*CamAttribsCBData = CameraAttribsB;
+                }
+                {
+                    MapHelper<CameraAttribs> CamAttribs(pContext, m_CameraAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
+                    *CamAttribs = CameraAttribsB;
+                }
             }
         }
 
@@ -218,6 +246,23 @@ void Renderer::Render()
                 MapHelper<LightAttribs> lightAttribs(pContext, m_LightAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
                 lightAttribs->f4Direction = dirLight.m_LightDirection;
                 lightAttribs->f4Intensity = dirLight.GetIntensity();
+            }
+        }
+
+        // Render Models
+        for (auto entity : viewModel)
+        {
+            auto& model = viewModel.get<MeshComponent>(entity);
+
+            if (model.m_bUseResourceCache)
+            {
+                m_GLTFRenderer->Begin(pDevice, pContext, m_CacheUseInfo, model.m_CacheBindings, m_CameraAttribsCB, m_LightAttribsCB);
+                m_GLTFRenderer->Render(pContext, *model.m_Model, m_RenderParams, nullptr, &model.m_CacheBindings);
+            }
+            else
+            {
+                m_GLTFRenderer->Begin(pContext);
+                m_GLTFRenderer->Render(pContext, *model.m_Model, m_RenderParams, &model.m_ModelResourceBindings);
             }
         }
     }
@@ -243,8 +288,8 @@ void Renderer::Render()
 }
 
 GLTF_PBR_Renderer::ModelResourceBindings Renderer::CreateResourceBindings(GLTF::Model& GLTFModel,
-                                                                IBuffer*     pCameraAttribs,
-                                                                IBuffer*     pLightAttribs)
+                                                                          IBuffer*     pCameraAttribs,
+                                                                          IBuffer*     pLightAttribs)
 {
     return m_GLTFRenderer->CreateResourceBindings(GLTFModel, pCameraAttribs, pLightAttribs);
 }
