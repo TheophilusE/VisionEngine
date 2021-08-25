@@ -2,6 +2,8 @@
 #include "VisionApp.h"
 
 #include "imgui.h"
+#include "imGuIZMO.h"
+#include "ImGuiUtils.hpp"
 
 namespace Diligent
 {
@@ -39,15 +41,16 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
 
     m_Renderer.Initialize(m_pEngineFactory, m_pDevice, m_pImmediateContext, m_pSwapChain);
 
-    m_Camera = m_Scene->CreateEntity("Camera Component");
+    m_Camera           = m_Scene->CreateEntity("Camera Component");
     m_DirectionalLight = m_Scene->CreateEntity("Directional Light Component");
-    m_Helmet = m_Scene->CreateEntity("Helmet");
+    m_Helmet           = m_Scene->CreateEntity("Helmet");
 
     m_DirectionalLight.AddComponent<DirectionalLightComponent>();
     m_Camera.AddComponent<CameraComponent>();
     auto& m = m_Helmet.AddComponent<MeshComponent>();
     m.LoadModel("models/DamagedHelmet/DamagedHelmet.gltf", m_Renderer);
-    
+    //auto& t = m_Helmet.GetComponent<TransformComponent>();
+    //t.Rotation = t.Rotation.RotationFromAxisAngle(float3{0.f, 0.f, 1.f}, 120.f) * t.Rotation;
 }
 
 void VisionApp::UpdateUI()
@@ -56,6 +59,36 @@ void VisionApp::UpdateUI()
     {
         ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::End();
+    }
+
+    {
+        auto& light = m_DirectionalLight.GetComponent<DirectionalLightComponent>();
+        auto& m     = m_Helmet.GetComponent<MeshComponent>();
+        auto& t     = m_Helmet.GetComponent<TransformComponent>();
+
+        ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+#ifdef PLATFORM_WIN32
+            if (ImGui::Button("Load model"))
+            {
+                FileDialogAttribs OpenDialogAttribs{FILE_DIALOG_TYPE_OPEN};
+                OpenDialogAttribs.Title  = "Select GLTF file";
+                OpenDialogAttribs.Filter = "glTF files\0*.gltf;*.glb\0";
+                auto FileName            = FileSystem::FileDialog(OpenDialogAttribs);
+                if (!FileName.empty())
+                {
+                    m.LoadModel(FileName.c_str(), m_Renderer);
+                }
+            }
+#endif
+            {
+                ImGui::gizmo3D("Model Rotation", t.Rotation, ImGui::GetTextLineHeight() * 10);
+                ImGui::SameLine();
+                ImGui::gizmo3D("Light direction", light.m_LightDirection, ImGui::GetTextLineHeight() * 10);
+            }
+        }
         ImGui::End();
     }
 }
@@ -70,6 +103,16 @@ void VisionApp::Update(double CurrTime, double ElapsedTime)
     UpdateUI();
 
     m_Scene->Update(m_InputController, m_Renderer.GetRenderDevice(), m_Renderer.GetSwapChain(), static_cast<float>(ElapsedTime));
+
+    auto& t = m_Helmet.GetComponent<TransformComponent>();
+    if (InputManager::IsPressed("Jump"))
+    {
+        t.Translation.y += 0.001f;
+
+        VISION_CORE_INFO(t.Translation.y);
+    }
+
+    //t.Rotation = t.Rotation.RotationFromAxisAngle(float3{0.f, 1.f, 0.f}, 0.01f) * t.Rotation.RotationFromAxisAngle(float3{1.f, 0.f, 0.f}, 0.01f) * t.Rotation.RotationFromAxisAngle(float3{0.f, 0.f, 1.f}, 0.01f) * t.Rotation;
 }
 
 void VisionApp::Render()

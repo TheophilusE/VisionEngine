@@ -180,9 +180,10 @@ void Scene::Update(Diligent::InputController& controller, IRenderDevice* pDevice
 
     for (int i = 0; i < scenes.size(); ++i)
     {
-        auto& pRegistry  = scenes[i]->GetSceneRegistry();
-        auto  viewCamera = pRegistry.view<CameraComponent>();
-        auto  viewModel  = pRegistry.view<MeshComponent>();
+        auto& pRegistry          = scenes[i]->GetSceneRegistry();
+        auto  viewCamera         = pRegistry.view<CameraComponent>();
+        auto  viewModel          = pRegistry.view<MeshComponent>();
+        auto  viewTransformModel = pRegistry.view<TransformComponent, MeshComponent>();
 
         // Update Camera
         for (auto entity : viewCamera)
@@ -207,7 +208,7 @@ void Scene::Update(Diligent::InputController& controller, IRenderDevice* pDevice
                                                    fEarthRadius + m_fMaxElevation,
                                                    fNearPlaneZ,
                                                    fFarPlaneZ);
-                fNearPlaneZ = std::max(fNearPlaneZ, 50.f) * 0.1f;
+                fNearPlaneZ = std::max(fNearPlaneZ, 50.f) * 0.001f;
                 fFarPlaneZ  = std::max(fFarPlaneZ, fNearPlaneZ + 100.f);
                 fFarPlaneZ  = std::max(fFarPlaneZ, 1000.f);
 
@@ -227,6 +228,16 @@ void Scene::Update(Diligent::InputController& controller, IRenderDevice* pDevice
                 AnimationTimer = std::fmod(AnimationTimer, model.m_Model->Animations[model.m_AnimationIndex].End);
                 model.m_Model->UpdateAnimation(model.m_AnimationIndex, AnimationTimer);
             }
+        }
+
+        // Update model transform
+        // for (auto [entity, transform, model] : viewTransformModel) {}
+        for (auto entity : viewTransformModel)
+        {
+            auto& transform = viewTransformModel.get<TransformComponent>(entity);
+            auto& model = viewTransformModel.get<MeshComponent>(entity);
+
+            model.m_RenderParams.ModelTransform = transform.GetTransform();
         }
     }
 }

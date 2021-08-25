@@ -256,13 +256,13 @@ void Renderer::Render()
 
             if (model.m_bUseResourceCache)
             {
-                m_GLTFRenderer->Begin(pDevice, pContext, m_CacheUseInfo, model.m_CacheBindings, m_CameraAttribsCB, m_LightAttribsCB);
-                m_GLTFRenderer->Render(pContext, *model.m_Model, m_RenderParams, nullptr, &model.m_CacheBindings);
+                m_GLTFRenderer->Begin(pDevice, pContext, model.m_CacheUseInfo, model.m_CacheBindings, m_CameraAttribsCB, m_LightAttribsCB);
+                m_GLTFRenderer->Render(pContext, *model.m_Model, model.m_RenderParams, nullptr, &model.m_CacheBindings);
             }
             else
             {
                 m_GLTFRenderer->Begin(pContext);
-                m_GLTFRenderer->Render(pContext, *model.m_Model, m_RenderParams, &model.m_ModelResourceBindings);
+                m_GLTFRenderer->Render(pContext, *model.m_Model, model.m_RenderParams, &model.m_ModelResourceBindings);
             }
         }
     }

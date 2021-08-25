@@ -40,18 +40,18 @@ struct TagComponent
 
 struct TransformComponent
 {
-    Diligent::float3 Translation = {0.0f, 0.0f, 0.0f};
-    Diligent::float4 Rotation    = {0.0f, 0.0f, 0.0f, 1.0f};
-    Diligent::float3 Scale       = {1.0f, 1.0f, 1.0f};
+    float3     Translation = {0.0f, 0.0f, 0.0f};
+    Quaternion Rotation    = Quaternion::RotationFromAxisAngle(float3{0.f, 1.0f, 0.0f}, -PI_F / 2.f);
+    float3     Scale       = {1.0f, 1.0f, 1.0f};
 
     TransformComponent()                          = default;
     TransformComponent(const TransformComponent&) = default;
     TransformComponent(const Diligent::float3& translation) :
         Translation(translation) {}
 
-    Diligent::float4x4 GetTransform() const
+    float4x4 GetTransform() const
     {
-        return Diligent::float4x4::Translation(Translation) * Diligent::Quaternion::MakeQuaternion(Rotation).ToMatrix() * Diligent::float4x4::Scale(Scale);
+        return float4x4::Translation(Translation) * Rotation.ToMatrix() * float4x4::Scale(Scale);
     }
 };
 
@@ -102,7 +102,7 @@ struct CameraComponent
 
 struct MeshComponent
 {
-    MeshComponent()                     = default;
+    MeshComponent() = default;
     //MeshComponent(const MeshComponent&) = default;
 
     void LoadModel(const char* Path, Renderer& renderer);
