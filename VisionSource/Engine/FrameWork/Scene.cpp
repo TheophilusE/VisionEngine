@@ -51,7 +51,7 @@ Ptr<Scene> Scene::Create()
 
     Ptr<Scene> thisScene(std::make_unique<Scene>(thisSceneID, "MainScene", sSettings, ImportStyle::Local, "MainScene"));
 
-	return thisScene;
+    return thisScene;
 }
 
 Entity Scene::CreateEntity(const String& name)
@@ -71,8 +71,25 @@ void Scene::DestroyEntity(Entity entity)
     m_Registry.destroy(entity);
 }
 
-void Scene::Update(float dt)
+void Scene::Update(Diligent::InputController& controller, float dt)
 {
+    auto& scenes = Scene::FindAllScenes();
+
+    for (int i = 0; i < scenes.size(); ++i)
+    {
+        auto& pRegistry  = scenes[i]->GetSceneRegistry();
+        auto  viewCamera = pRegistry.view<CameraComponent>();
+
+        // Update Camera
+        for (auto entity : viewCamera)
+        {
+            auto& camera = viewCamera.get<CameraComponent>(entity);
+            if (camera.Active)
+            {
+                camera.m_Camera.Update(controller, dt);
+            }
+        }
+    }
 }
 
 template <typename T>

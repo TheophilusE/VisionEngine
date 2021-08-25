@@ -34,7 +34,7 @@ private:
     void UpdateUI();
 
 private:
-    Ptr<Renderer> m_Renderer;
+    Renderer m_Renderer;
     Ptr<Scene>    m_Scene = Scene::Create();
 
     Entity m_Camera;

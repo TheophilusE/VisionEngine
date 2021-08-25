@@ -7,13 +7,16 @@
 #include "CommonlyUsedStates.h"
 #include "ShaderMacroHelper.hpp"
 #include "FileSystem.hpp"
-#include "../FrameWork/Components.h"
+
+#include "../Core/OS/OS.h"
 
 namespace Vision
 {
 #include "Shaders/Common/public/BasicStructures.fxh"
 #include "Shaders/PostProcess/ToneMapping/public/ToneMappingStructures.fxh"
 
+namespace
+{
 struct EnvMapRenderAttribs
 {
     ToneMappingAttribs TMAttribs;
@@ -23,19 +26,37 @@ struct EnvMapRenderAttribs
     float Unusued1;
     float Unusued2;
 };
+} // namespace
 
-Renderer::Renderer(IRenderDevice*    pDev,
-                   IDeviceContext*   pCtx,
-                   const CreateInfo& CI)
+void Renderer::Initialize(IEngineFactory* pEF, IRenderDevice* pD, IDeviceContext* pC, ISwapChain* pS)
 {
-    GLTF_PBR_Renderer::GLTF_PBR_Renderer(pDev, pCtx, CI);
-}
+    pEngineFactory = pEF;
+    pDevice        = pD;
+    pContext       = pC;
+    pSwapChain     = pS;
 
-void Renderer::Initialize()
-{
+    if (!(pEngineFactory || pDevice || pContext || pSwapChain))
+    {
+        VISION_CORE_ERROR("Renderpath Initialization Failed");
+        VISION_CORE_WARN("Failed To Initialize Renderer");
+        LOG_FATAL_ERROR_AND_THROW("Renderer Initialization Returned Null");
+    }
+
     RefCntAutoPtr<ITexture> EnvironmentMap;
     CreateTextureFromFile("textures/sky.dds", TextureLoadInfo{"Environment map"}, pDevice, &EnvironmentMap);
     m_EnvironmentMapSRV = EnvironmentMap->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+
+    auto BackBufferFmt  = pSwapChain->GetDesc().ColorBufferFormat;
+    auto DepthBufferFmt = pSwapChain->GetDesc().DepthBufferFormat;
+
+    GLTF_PBR_Renderer::CreateInfo RendererCI;
+    RendererCI.RTVFmt          = BackBufferFmt;
+    RendererCI.DSVFmt          = DepthBufferFmt;
+    RendererCI.AllowDebugView  = true;
+    RendererCI.UseIBL          = true;
+    RendererCI.FrontCCW        = true;
+    RendererCI.UseTextureAtlas = m_bUseResourceCache;
+    m_GLTFRenderer.reset(new GLTF_PBR_Renderer(pDevice, pContext, RendererCI));
 
     CreateUniformBuffer(pDevice, sizeof(CameraAttribs), "Camera attribs buffer", &m_CameraAttribsCB);
     CreateUniformBuffer(pDevice, sizeof(LightAttribs), "Light attribs buffer", &m_LightAttribsCB);
@@ -52,9 +73,12 @@ void Renderer::Initialize()
     // clang-format on
     pContext->TransitionResourceStates(_countof(Barriers), Barriers);
 
-    PrecomputeCubemaps(pDevice, pContext, m_EnvironmentMapSRV);
+    m_GLTFRenderer->PrecomputeCubemaps(pDevice, pContext, m_EnvironmentMapSRV);
 
     CreateEnvMapPSO();
+
+    // Set scene settings 
+    m_BackgroundMode = BackgroundMode::EnvironmentMap;
 }
 
 void Renderer::CreateEnvMapPSO()
@@ -139,11 +163,11 @@ void Renderer::CreateEnvMapSRB()
                 break;
 
             case BackgroundMode::Irradiance:
-                pEnvMapSRV = GetIrradianceCubeSRV();
+                pEnvMapSRV = m_GLTFRenderer->GetIrradianceCubeSRV();
                 break;
 
             case BackgroundMode::PrefilteredEnvMap:
-                pEnvMapSRV = GetPrefilteredEnvMapSRV();
+                pEnvMapSRV = m_GLTFRenderer->GetPrefilteredEnvMapSRV();
                 break;
 
             default:
@@ -162,59 +186,58 @@ void Renderer::Render()
     pContext->ClearRenderTarget(pRTV, ClearColor, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     pContext->ClearDepthStencil(pDSV, CLEAR_DEPTH_FLAG, 1.f, 0, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 
+    auto& scenes = Scene::FindAllScenes();
+
+    for (int i = 0; i < scenes.size(); ++i)
     {
-        auto& scenes = Scene::FindAllScenes();
-        for (int i = 0; i < scenes.size(); ++i)
+        auto& pRegistry            = scenes[i]->GetSceneRegistry();
+        auto  viewDirectionalLight = pRegistry.view<DirectionalLightComponent>();
+        auto  viewCamera           = pRegistry.view<CameraComponent>();
+
+        // Render Camera
+        for (auto entity : viewCamera)
         {
-            auto& pRegistry            = scenes[i]->GetSceneRegistry();
-            auto  viewDirectionalLight = pRegistry.view<DirectionalLightComponent>();
-            auto  viewCamera           = pRegistry.view<CameraComponent>();
-
-            for (auto entity : viewDirectionalLight)
+            auto& camera = viewCamera.get<CameraComponent>(entity);
+            if (camera.Active)
             {
-                // Execute
-                // Ex. auto &vel = view.get<velocity>(entity);
-                auto& dirLight = viewDirectionalLight.get<DirectionalLightComponent>(entity);
-                {
-                    MapHelper<LightAttribs> lightAttribs(pContext, m_LightAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
-                    lightAttribs->f4Direction = dirLight.m_LightDirection;
-                    lightAttribs->f4Intensity = dirLight.m_LightColor * dirLight.m_LightIntensity;
-                }
-            }
-
-            for (auto entity : viewCamera)
-            {
-                auto& camera = viewCamera.get<CameraComponent>(entity);
-                if (camera.Active)
-                {
-                    MapHelper<Diligent::CameraAttribs> CamAttribs(pContext, m_CameraAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
-                    CamAttribs->mProjT        = camera.m_Camera.GetProjMatrix().Transpose();
-                    CamAttribs->mViewProjT    = camera.m_Camera.GetViewMatrix().Transpose();
-                    CamAttribs->mViewProjInvT = camera.m_Camera.GetViewMatrix().Inverse().Transpose();
-                    CamAttribs->f4Position    = float4(camera.m_Camera.GetPos(), 1);
-                }
+                MapHelper<CameraAttribs> CamAttribs(pContext, m_CameraAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
+                CamAttribs->mProjT        = camera.m_Camera.GetProjMatrix().Transpose();
+                CamAttribs->mViewProjT    = camera.m_Camera.GetViewMatrix().Transpose();
+                CamAttribs->mViewProjInvT = camera.m_Camera.GetViewMatrix().Inverse().Transpose();
+                CamAttribs->f4Position    = float4(camera.m_Camera.GetPos(), 1);
             }
         }
 
-        if (m_BackgroundMode != BackgroundMode::None)
+        // Render Directional Light
+        for (auto entity : viewDirectionalLight)
         {
+            // Ex. auto &vel = view.get<pos, velocity>(entity);
+            auto& dirLight = viewDirectionalLight.get<DirectionalLightComponent>(entity);
             {
-                MapHelper<EnvMapRenderAttribs> EnvMapAttribs(pContext, m_EnvMapRenderAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
-                EnvMapAttribs->TMAttribs.iToneMappingMode     = TONE_MAPPING_MODE_UNCHARTED2;
-                EnvMapAttribs->TMAttribs.bAutoExposure        = 0;
-                EnvMapAttribs->TMAttribs.fMiddleGray          = m_RenderParams.MiddleGray;
-                EnvMapAttribs->TMAttribs.bLightAdaptation     = 0;
-                EnvMapAttribs->TMAttribs.fWhitePoint          = m_RenderParams.WhitePoint;
-                EnvMapAttribs->TMAttribs.fLuminanceSaturation = 1.0;
-                EnvMapAttribs->AverageLogLum                  = m_RenderParams.AverageLogLum;
-                EnvMapAttribs->MipLevel                       = m_RenderSettings.m_EnvMapMipLevel;
+                MapHelper<LightAttribs> lightAttribs(pContext, m_LightAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
+                lightAttribs->f4Direction = dirLight.m_LightDirection;
+                lightAttribs->f4Intensity = dirLight.GetIntensity();
             }
-            pContext->SetPipelineState(m_EnvMapPSO);
-            pContext->CommitShaderResources(m_EnvMapSRB, RESOURCE_STATE_TRANSITION_MODE_VERIFY);
-            DrawAttribs drawAttribs(3, DRAW_FLAG_VERIFY_ALL);
-            pContext->Draw(drawAttribs);
         }
     }
-}
 
+    if (m_BackgroundMode != BackgroundMode::None)
+    {
+        {
+            MapHelper<EnvMapRenderAttribs> EnvMapAttribs(pContext, m_EnvMapRenderAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
+            EnvMapAttribs->TMAttribs.iToneMappingMode     = TONE_MAPPING_MODE_UNCHARTED2;
+            EnvMapAttribs->TMAttribs.bAutoExposure        = 0;
+            EnvMapAttribs->TMAttribs.fMiddleGray          = m_RenderParams.MiddleGray;
+            EnvMapAttribs->TMAttribs.bLightAdaptation     = 0;
+            EnvMapAttribs->TMAttribs.fWhitePoint          = m_RenderParams.WhitePoint;
+            EnvMapAttribs->TMAttribs.fLuminanceSaturation = 1.0;
+            EnvMapAttribs->AverageLogLum                  = m_RenderParams.AverageLogLum;
+            EnvMapAttribs->MipLevel                       = m_RenderSettings.m_EnvMapMipLevel;
+        }
+        pContext->SetPipelineState(m_EnvMapPSO);
+        pContext->CommitShaderResources(m_EnvMapSRB, RESOURCE_STATE_TRANSITION_MODE_VERIFY);
+        DrawAttribs drawAttribs(3, DRAW_FLAG_VERIFY_ALL);
+        pContext->Draw(drawAttribs);
+    }
+}
 } // namespace Vision

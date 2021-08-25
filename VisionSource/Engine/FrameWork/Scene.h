@@ -3,6 +3,7 @@
 
 #include "entt/entt.hpp"
 #include "../Input/InputManager.h"
+#include "InputController.hpp"
 
 #define ROOT_SCENE_ID 1
 
@@ -35,7 +36,7 @@ public:
     Entity CreateEntity(const String& name = String());
     void   DestroyEntity(Entity entity);
 
-    void Update(float dt);
+    void Update(Diligent::InputController& controller, float dt);
 
     static void ResetNextID();
 

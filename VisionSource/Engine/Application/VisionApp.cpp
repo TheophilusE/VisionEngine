@@ -37,23 +37,7 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
 
     InputManager::GetSingleton()->setEnabled(true);
 
-    auto BackBufferFmt  = m_pSwapChain->GetDesc().ColorBufferFormat;
-    auto DepthBufferFmt = m_pSwapChain->GetDesc().DepthBufferFormat;
-
-    GLTF_PBR_Renderer::CreateInfo RendererCI;
-    RendererCI.RTVFmt          = BackBufferFmt;
-    RendererCI.DSVFmt          = DepthBufferFmt;
-    RendererCI.AllowDebugView  = true;
-    RendererCI.UseIBL          = true;
-    RendererCI.FrontCCW        = true;
-    RendererCI.UseTextureAtlas = false; // Use Resource Cache
-    m_Renderer.reset(new Renderer(m_pDevice, m_pImmediateContext, RendererCI));
-
-    m_Renderer->pEngineFactory = m_pEngineFactory;
-    m_Renderer->pDevice        = m_pDevice;
-    m_Renderer->pContext       = m_pImmediateContext;
-    m_Renderer->pSwapChain     = m_pSwapChain;
-    m_Renderer->Initialize();
+    m_Renderer.Initialize(m_pEngineFactory, m_pDevice, m_pImmediateContext, m_pSwapChain);
 
     m_Camera = m_Scene->CreateEntity("Camera Component");
     m_DirectionalLight = m_Scene->CreateEntity("Directional Light Component");
@@ -81,7 +65,7 @@ void VisionApp::Update(double CurrTime, double ElapsedTime)
     ApplicationBase::Update(CurrTime, ElapsedTime);
     UpdateUI();
 
-    //InputManager::GetSingleton()->getMouse()->GetState().
+    m_Scene->Update(m_InputController, static_cast<float>(ElapsedTime));
 
     if (InputManager::GetSingleton()->isPressed("Jump"))
     {
@@ -91,7 +75,7 @@ void VisionApp::Update(double CurrTime, double ElapsedTime)
 
 void VisionApp::Render()
 {
-    m_Renderer->Render();
+    m_Renderer.Render();
 }
 
 void VisionApp::PostRender()
