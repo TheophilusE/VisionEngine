@@ -15,7 +15,6 @@ Scene::Scene(SceneID id, const String& name, const SceneSettings& settings, Impo
     s_Scenes.push_back(this);
 }
 
-
 Scene::Scene() {}
 
 Scene::~Scene()
@@ -127,7 +126,6 @@ void Scene::OnComponentAdded<MeshComponent>(Entity entity, MeshComponent& compon
 {
     VISION_CORE_INFO("Added A Mesh Component");
 }
-
 
 void Scene::ResetNextID()
 {

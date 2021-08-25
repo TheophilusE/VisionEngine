@@ -66,11 +66,6 @@ void VisionApp::Update(double CurrTime, double ElapsedTime)
     UpdateUI();
 
     m_Scene->Update(m_InputController, static_cast<float>(ElapsedTime));
-
-    if (InputManager::GetSingleton()->isPressed("Jump"))
-    {
-        //VISION_INFO("Jump Pressed!");
-    }
 }
 
 void VisionApp::Render()
