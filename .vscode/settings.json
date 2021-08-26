@@ -107,7 +107,8 @@
         "xutility": "cpp",
         "execution": "cpp",
         "hash_map": "cpp",
-        "hash_set": "cpp"
+        "hash_set": "cpp",
+        "span": "cpp"
     },
     "cmake.configureOnOpen": true
 }

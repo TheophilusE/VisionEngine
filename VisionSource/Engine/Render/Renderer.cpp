@@ -80,6 +80,23 @@ void Renderer::Initialize(IEngineFactory* pEF, IRenderDevice* pD, IDeviceContext
 
     // Set scene settings
     m_BackgroundMode = BackgroundMode::EnvironmentMap;
+
+    const auto& ColorFmtInfo                 = pDevice->GetTextureFormatInfoExt(pSwapChain->GetDesc().ColorBufferFormat);
+    const auto& DepthFmtInfo                 = pDevice->GetTextureFormatInfoExt(DepthBufferFormat);
+    m_RenderSettings.m_SupportedSampleCounts = ColorFmtInfo.SampleCounts & DepthFmtInfo.SampleCounts;
+    if (m_RenderSettings.m_SupportedSampleCounts & 0x04)
+    {
+        m_RenderSettings.m_SampleCount = 4;
+    }
+    else if (m_RenderSettings.m_SupportedSampleCounts & 0x02)
+    {
+        m_RenderSettings.m_SampleCount = 2;
+    }
+    else
+    {
+        VISION_CORE_WARN(ColorFmtInfo.Name, " + ", DepthFmtInfo.Name, " pair does not allow multisampling on this device");
+        m_RenderSettings.m_SampleCount = 1;
+    }
 }
 
 void Renderer::CreateEnvMapPSO()
@@ -178,15 +195,95 @@ void Renderer::CreateEnvMapSRB()
     }
 }
 
+void Renderer::CreateMSAARenderTarget()
+{
+    if (m_RenderSettings.m_SampleCount == 1)
+        return;
+
+    const auto& SCDesc = pSwapChain->GetDesc();
+    // Create window-size multi-sampled offscreen render target
+    TextureDesc ColorDesc;
+    ColorDesc.Name           = "Multisampled render target";
+    ColorDesc.Type           = RESOURCE_DIM_TEX_2D;
+    ColorDesc.BindFlags      = BIND_RENDER_TARGET;
+    ColorDesc.Width          = SCDesc.Width;
+    ColorDesc.Height         = SCDesc.Height;
+    ColorDesc.MipLevels      = 1;
+    ColorDesc.Format         = SCDesc.ColorBufferFormat;
+    bool NeedsSRGBConversion = pDevice->GetDeviceInfo().IsD3DDevice() && (ColorDesc.Format == TEX_FORMAT_RGBA8_UNORM_SRGB || ColorDesc.Format == TEX_FORMAT_BGRA8_UNORM_SRGB);
+    if (NeedsSRGBConversion)
+    {
+        // Internally Direct3D swap chain images are not SRGB, and ResolveSubresource
+        // requires source and destination formats to match exactly or be typeless.
+        // So we will have to create a typeless texture and use SRGB render target view with it.
+        ColorDesc.Format = ColorDesc.Format == TEX_FORMAT_RGBA8_UNORM_SRGB ? TEX_FORMAT_RGBA8_TYPELESS : TEX_FORMAT_BGRA8_TYPELESS;
+    }
+
+    // Set the desired number of samples
+    ColorDesc.SampleCount = m_RenderSettings.m_SampleCount;
+    // Define optimal clear value
+    ColorDesc.ClearValue.Format   = SCDesc.ColorBufferFormat;
+    ColorDesc.ClearValue.Color[0] = 0.125f;
+    ColorDesc.ClearValue.Color[1] = 0.125f;
+    ColorDesc.ClearValue.Color[2] = 0.125f;
+    ColorDesc.ClearValue.Color[3] = 1.f;
+    RefCntAutoPtr<ITexture> pColor;
+    pDevice->CreateTexture(ColorDesc, nullptr, &pColor);
+
+    // Store the render target view
+    m_pMSColorRTV.Release();
+    if (NeedsSRGBConversion)
+    {
+        TextureViewDesc RTVDesc;
+        RTVDesc.ViewType = TEXTURE_VIEW_RENDER_TARGET;
+        RTVDesc.Format   = SCDesc.ColorBufferFormat;
+        pColor->CreateView(RTVDesc, &m_pMSColorRTV);
+    }
+    else
+    {
+        m_pMSColorRTV = pColor->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET);
+    }
+
+
+    // Create window-size multi-sampled depth buffer
+    TextureDesc DepthDesc = ColorDesc;
+    DepthDesc.Name        = "Multisampled depth buffer";
+    DepthDesc.Format      = DepthBufferFormat;
+    DepthDesc.BindFlags   = BIND_DEPTH_STENCIL;
+    // Define optimal clear value
+    DepthDesc.ClearValue.Format               = DepthDesc.Format;
+    DepthDesc.ClearValue.DepthStencil.Depth   = 1;
+    DepthDesc.ClearValue.DepthStencil.Stencil = 0;
+
+    RefCntAutoPtr<ITexture> pDepth;
+    pDevice->CreateTexture(DepthDesc, nullptr, &pDepth);
+    // Store the depth-stencil view
+    m_pMSDepthDSV = pDepth->GetDefaultView(TEXTURE_VIEW_DEPTH_STENCIL);
+}
+
 void Renderer::Render()
 {
-    auto* pRTV          = pSwapChain->GetCurrentBackBufferRTV();
-    auto* pDSV          = pSwapChain->GetDepthBufferDSV();
-    bool  m_bIsGLDevice = pDevice->GetDeviceInfo().IsGLDevice();
+    ITextureView* pRTV = nullptr;
+    ITextureView* pDSV = nullptr;
+    if (m_RenderSettings.m_SampleCount > 1 && m_RenderSettings.m_UseMSAA)
+    {
+        // Set off-screen multi-sampled render target and depth-stencil buffer
+        pRTV = m_pMSColorRTV;
+        pDSV = m_pMSDepthDSV;
+    }
+    else
+    {
+        // Render directly to the current swap chain back buffer.
+        pRTV = pSwapChain->GetCurrentBackBufferRTV();
+        pDSV = pSwapChain->GetDepthBufferDSV();
+    }
+
+    bool m_bIsGLDevice = pDevice->GetDeviceInfo().IsGLDevice();
     // Clear the back buffer
     const float ClearColor[] = {0.032f, 0.032f, 0.032f, 1.0f};
+    pContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     pContext->ClearRenderTarget(pRTV, ClearColor, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-    pContext->ClearDepthStencil(pDSV, CLEAR_DEPTH_FLAG, 1.f, 0, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+    pContext->ClearDepthStencil(pDSV, CLEAR_DEPTH_FLAG, 1.0f, 0, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 
     auto& scenes = Scene::FindAllScenes();
 
@@ -229,8 +326,7 @@ void Renderer::Render()
                 {
                     //MapHelper<CameraAttribs> CamAttribsCBData(pContext, camera.m_pcbCameraAttribs, MAP_WRITE, MAP_FLAG_DISCARD);
                     //*CamAttribsCBData = CameraAttribsB;
-                }
-                {
+                } {
                     MapHelper<CameraAttribs> CamAttribs(pContext, m_CameraAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
                     *CamAttribs = CameraAttribsB;
                 }
@@ -253,6 +349,16 @@ void Renderer::Render()
         for (auto entity : viewModel)
         {
             auto& model = viewModel.get<MeshComponent>(entity);
+
+            // Reset settings from the renderer
+            model.m_RenderParams.AlphaModes        = m_RenderParams.AlphaModes;
+            model.m_RenderParams.AverageLogLum     = m_RenderParams.AverageLogLum;
+            model.m_RenderParams.DebugView         = m_RenderParams.DebugView;
+            model.m_RenderParams.EmissionScale     = m_RenderParams.EmissionScale;
+            model.m_RenderParams.IBLScale          = m_RenderParams.IBLScale;
+            model.m_RenderParams.MiddleGray        = m_RenderParams.MiddleGray;
+            model.m_RenderParams.OcclusionStrength = m_RenderParams.OcclusionStrength;
+            model.m_RenderParams.WhitePoint        = m_RenderParams.WhitePoint;
 
             if (model.m_bUseResourceCache)
             {
@@ -284,6 +390,17 @@ void Renderer::Render()
         pContext->CommitShaderResources(m_EnvMapSRB, RESOURCE_STATE_TRANSITION_MODE_VERIFY);
         DrawAttribs drawAttribs(3, DRAW_FLAG_VERIFY_ALL);
         pContext->Draw(drawAttribs);
+    }
+
+    if (m_RenderSettings.m_SampleCount > 1 && m_RenderSettings.m_UseMSAA)
+    {
+        // Resolve multi-sampled render target into the current swap chain back buffer.
+        auto pCurrentBackBuffer = pSwapChain->GetCurrentBackBufferRTV()->GetTexture();
+
+        ResolveTextureSubresourceAttribs ResolveAttribs;
+        ResolveAttribs.SrcTextureTransitionMode = RESOURCE_STATE_TRANSITION_MODE_TRANSITION;
+        ResolveAttribs.DstTextureTransitionMode = RESOURCE_STATE_TRANSITION_MODE_TRANSITION;
+        pContext->ResolveTextureSubresource(m_pMSColorRTV->GetTexture(), pCurrentBackBuffer, ResolveAttribs);
     }
 }
 

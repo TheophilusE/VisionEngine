@@ -4,6 +4,7 @@
 #include "GLTFLoader.hpp"
 #include "GLTF_PBR_Renderer.hpp"
 #include "BasicMath.hpp"
+#include "ShadowMapManager.hpp"
 
 #include "../FrameWork/Scene.h"
 
@@ -14,6 +15,11 @@ using namespace Diligent;
 struct RenderSettings
 {
     float m_EnvMapMipLevel = 1.0f;
+
+    // MSAA
+    bool   m_UseMSAA               = false;
+    Uint8  m_SampleCount           = 4;
+    Uint32 m_SupportedSampleCounts = 0;
 };
 
 class Renderer
@@ -26,13 +32,16 @@ public:
     GLTF_PBR_Renderer::ModelResourceBindings CreateResourceBindings(GLTF::Model& GLTFModel,
                                                                     IBuffer*     pCameraAttribs,
                                                                     IBuffer*     pLightAttribs);
+    void                                     CreateMSAARenderTarget();
 
-    IEngineFactory*        GetEngineFactory() { return pEngineFactory; }
-    IRenderDevice*         GetRenderDevice() { return pDevice; }
-    IDeviceContext*        GetDeviceContext() { return pContext; }
-    ISwapChain*            GetSwapChain() { return pSwapChain; }
-    RefCntAutoPtr<IBuffer> GetCamAttribs() { return m_CameraAttribsCB; }
-    RefCntAutoPtr<IBuffer> GetLightAttribs() { return m_LightAttribsCB; }
+    IEngineFactory*                GetEngineFactory() { return pEngineFactory; }
+    IRenderDevice*                 GetRenderDevice() { return pDevice; }
+    IDeviceContext*                GetDeviceContext() { return pContext; }
+    ISwapChain*                    GetSwapChain() { return pSwapChain; }
+    RefCntAutoPtr<IBuffer>         GetCamAttribs() { return m_CameraAttribsCB; }
+    RefCntAutoPtr<IBuffer>         GetLightAttribs() { return m_LightAttribsCB; }
+    GLTF_PBR_Renderer::RenderInfo& GetRenderParams() { return m_RenderParams; }
+    RenderSettings&                GetRenderSettings() { return m_RenderSettings; }
 
     enum class BackgroundMode : int
     {
@@ -58,6 +67,11 @@ protected:
     bool                                 m_bUseResourceCache = false;
     RefCntAutoPtr<GLTF::ResourceManager> m_pResourceMgr;
     GLTF::ResourceCacheUseInfo           m_CacheUseInfo;
+
+    // Offscreen multi-sampled render target and depth-stencil - MSAA
+    RefCntAutoPtr<ITextureView>     m_pMSColorRTV;
+    RefCntAutoPtr<ITextureView>     m_pMSDepthDSV;
+    static constexpr TEXTURE_FORMAT DepthBufferFormat = TEX_FORMAT_D32_FLOAT;
 
 private:
     IEngineFactory* pEngineFactory;

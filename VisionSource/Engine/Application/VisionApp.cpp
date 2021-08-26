@@ -90,16 +90,90 @@ void VisionApp::UpdateUI()
                 ImGui::gizmo3D("Light direction", light.m_LightDirection, ImGui::GetTextLineHeight() * 10);
             }
 
+            if (ImGui::TreeNode("Environment Settings"))
             {
-                if (ImGui::TreeNode("Lighting"))
                 {
-                    ImGui::ColorEdit3("Light Color", &light.m_LightColor.r);
-                    // clang-format off
-                    ImGui::SliderFloat("Light Intensity", &light.m_LightIntensity, 0.f, 100.f);
-                    //ImGui::SliderFloat("Occlusion strength", &m_RenderParams.OcclusionStrength, 0.f,  1.f);
-                    //ImGui::SliderFloat("Emission scale",     &m_RenderParams.EmissionScale,     0.f,  1.f);
-                    //ImGui::SliderFloat("IBL scale",          &m_RenderParams.IBLScale,          0.f,  1.f);
-                    // clang-format on
+                    if (ImGui::TreeNode("Environment Lighting"))
+                    {
+                        ImGui::ColorEdit3("Light Color", &light.m_LightColor.r);
+                        // clang-format off
+                        ImGui::SliderFloat("Light Intensity",    &light.m_LightIntensity,                        0.f, 100.f);
+                        ImGui::SliderFloat("Occlusion strength", &m_Renderer.GetRenderParams().OcclusionStrength, 0.f,  1.f);
+                        ImGui::SliderFloat("Emission scale",     &m_Renderer.GetRenderParams().EmissionScale,     0.f,  1.f);
+                        ImGui::SliderFloat("IBL scale",          &m_Renderer.GetRenderParams().IBLScale,          0.f,  1.f);
+                        ImGui::SliderFloat("Environment Map MIP Level", &m_Renderer.GetRenderSettings().m_EnvMapMipLevel, 0.0f, 7.0f);
+                        // clang-format on
+                        ImGui::TreePop();
+                    }
+
+                    if (ImGui::TreeNode("Tone mapping"))
+                    {
+                        // clang-format off
+                        ImGui::SliderFloat("Average log lum",    &m_Renderer.GetRenderParams().AverageLogLum,     0.01f, 10.0f);
+                        ImGui::SliderFloat("Middle gray",        &m_Renderer.GetRenderParams().MiddleGray,        0.01f,  1.0f);
+                        ImGui::SliderFloat("White point",        &m_Renderer.GetRenderParams().WhitePoint,        0.1f,  20.0f);
+                        // clang-format on
+                        ImGui::TreePop();
+                    }
+
+                    {
+                        std::array<const char*, static_cast<size_t>(Renderer::BackgroundMode::NumModes)> BackgroundModes;
+                        BackgroundModes[static_cast<size_t>(Renderer::BackgroundMode::None)]              = "None";
+                        BackgroundModes[static_cast<size_t>(Renderer::BackgroundMode::EnvironmentMap)]    = "Environment Map";
+                        BackgroundModes[static_cast<size_t>(Renderer::BackgroundMode::Irradiance)]        = "Irradiance";
+                        BackgroundModes[static_cast<size_t>(Renderer::BackgroundMode::PrefilteredEnvMap)] = "Prefiltered Environment Map";
+                        if (ImGui::Combo("Background mode", reinterpret_cast<int*>(&m_Renderer.m_BackgroundMode), BackgroundModes.data(), static_cast<int>(BackgroundModes.size())))
+                        {
+                            m_Renderer.CreateEnvMapSRB();
+                        }
+                    }
+
+                    {
+                        Array<const char*, static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::NumDebugViews)> DebugViews;
+
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::None)]            = "None";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::BaseColor)]       = "Base Color";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::Transparency)]    = "Transparency";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::NormalMap)]       = "Normal Map";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::Occlusion)]       = "Occlusion";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::Emissive)]        = "Emissive";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::Metallic)]        = "Metallic";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::Roughness)]       = "Roughness";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::DiffuseColor)]    = "Diffuse color";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::SpecularColor)]   = "Specular color (R0)";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::Reflectance90)]   = "Reflectance90";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::MeshNormal)]      = "Mesh normal";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::PerturbedNormal)] = "Perturbed normal";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::NdotV)]           = "n*v";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::DiffuseIBL)]      = "Diffuse IBL";
+                        DebugViews[static_cast<size_t>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::SpecularIBL)]     = "Specular IBL";
+                        ImGui::Combo("Debug view", reinterpret_cast<int*>(&m_Renderer.GetRenderParams().DebugView), DebugViews.data(), static_cast<int>(DebugViews.size()));
+                    }
+                }
+                ImGui::TreePop();
+            }
+
+            {
+                if (ImGui::TreeNode("Post Processing"))
+                {
+                    ImGui::Checkbox("Enable MSAA", &m_Renderer.GetRenderSettings().m_UseMSAA);
+
+                    std::array<std::pair<Uint8, const char*>, 4> ComboItems;
+
+                    Uint32 NumItems = 0;
+
+                    ComboItems[NumItems++] = std::make_pair(Uint8{1}, "1");
+                    if (m_Renderer.GetRenderSettings().m_SupportedSampleCounts & 0x02)
+                        ComboItems[NumItems++] = std::make_pair(Uint8{2}, "2");
+                    if (m_Renderer.GetRenderSettings().m_SupportedSampleCounts & 0x04)
+                        ComboItems[NumItems++] = std::make_pair(Uint8{4}, "4");
+                    if (m_Renderer.GetRenderSettings().m_SupportedSampleCounts & 0x08)
+                        ComboItems[NumItems++] = std::make_pair(Uint8{8}, "8");
+                    if (ImGui::Combo("MSAA Sample count", &m_Renderer.GetRenderSettings().m_SampleCount, ComboItems.data(), NumItems))
+                    {
+                        m_Renderer.CreateMSAARenderTarget();
+                    }
+
                     ImGui::TreePop();
                 }
             }
@@ -170,5 +244,6 @@ void VisionApp::WindowResize(Uint32 Width, Uint32 Height)
     // Call atmo resize here
 
     ApplicationBase::WindowResize(Width, Height);
+    m_Renderer.CreateMSAARenderTarget();
 }
 } // namespace Vision
