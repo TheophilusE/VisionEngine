@@ -12,7 +12,6 @@
 #include "GLTF_PBR_Renderer.hpp"
 #include "MapHelper.hpp"
 #include "EpipolarLightScattering.hpp"
-#include "ShadowMapManager.hpp"
 #include "Shaders/Common/public/BasicStructures.fxh"
 #include "Shaders/PostProcess/ToneMapping/public/ToneMappingStructures.fxh"
 #include "TextureUtilities.h"
