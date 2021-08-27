@@ -130,7 +130,7 @@ void VisionApp::UpdateUI()
                     float2& sensorDimension = camera.sensorDimension; // mm
                     float&  focalLength     = camera.focalLength;     // mm
                     float&  linearDistance  = camera.linearDistance;
-                    float   angleOfView     = 2.f * atan(sensorDimension.x / (2.f * focalLength)) * (180.f / PI_F);
+                    float   angleOfView     = atan(sensorDimension.x / (2.f * focalLength)) * atan(sensorDimension.y / (2.f * focalLength)) * (180.f / PI_F);
                     float   fieldOfView     = 2.f * (angleOfView / 2.f) * linearDistance;
                     Float32 fov             = fieldOfView;
 
