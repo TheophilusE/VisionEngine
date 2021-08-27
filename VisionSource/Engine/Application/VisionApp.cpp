@@ -134,10 +134,10 @@ void VisionApp::UpdateUI()
                     float   fieldOfView     = 2.f * (angleOfView / 2.f) * linearDistance;
                     Float32 fov             = fieldOfView;
 
-                    ImGui::SliderFloat("Sensor Dimension Width", &sensorDimension.x, 4.54f, 36.f);
-                    ImGui::SliderFloat("Sensor Dimension Height", &sensorDimension.y, 3.42f, 24.f);
-                    ImGui::SliderFloat("Camera Focal Length", &focalLength, 10.f, 500.f);
-                    ImGui::SliderFloat("Camera Linear Distance", &linearDistance, 1.f, 10000.f);
+                    ImGui::SliderFloat("Sensor Dimension Width", &sensorDimension.x, 0.00454f, 0.0364f);
+                    ImGui::SliderFloat("Sensor Dimension Height", &sensorDimension.y, 0.00342f, 0.024f);
+                    ImGui::SliderFloat("Camera Focal Length", &focalLength, 0.01f, 0.5f);
+                    ImGui::SliderFloat("Camera Linear Distance", &linearDistance, 0.001f, 10.f);
                     ImGui::SliderFloat("Camera Near Clip", &nearClip, 0.01f, 10000.f);
                     ImGui::SliderFloat("Camera Far Clip", &farClip, 1.f, 10000.f);
 
