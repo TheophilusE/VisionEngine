@@ -278,12 +278,14 @@ void Renderer::Render()
         pDSV = pSwapChain->GetDepthBufferDSV();
     }
 
-    bool m_bIsGLDevice = pDevice->GetDeviceInfo().IsGLDevice();
     // Clear the back buffer
     const float ClearColor[] = {0.032f, 0.032f, 0.032f, 1.0f};
     pContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     pContext->ClearRenderTarget(pRTV, ClearColor, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     pContext->ClearDepthStencil(pDSV, CLEAR_DEPTH_FLAG, 1.0f, 0, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+
+    // View Frustrum
+    ViewFrustumExt Frutstum;
 
     auto& scenes = Scene::FindAllScenes();
 
@@ -300,36 +302,25 @@ void Renderer::Render()
             auto& camera = viewCamera.get<CameraComponent>(entity);
             if (camera.Active)
             {
-                //MapHelper<CameraAttribs> CamAttribs(pContext, m_CameraAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
-                //CamAttribs->mProjT        = camera.m_Camera.GetProjMatrix().Transpose();
-                //CamAttribs->mViewProjT    = camera.m_Camera.GetViewMatrix().Transpose();
-                //CamAttribs->mViewProjInvT = camera.m_Camera.GetViewMatrix().Inverse().Transpose();
-                //CamAttribs->f4Position    = float4(camera.m_Camera.GetPos(), 1);
+                // Get pretransform matrix that rotates the scene according the surface orientation
+                auto SrfPreTransform = GetSurfacePretransformMatrix(float3{0, 0, 1});
 
-                float4x4 mViewProj = camera.m_Camera.GetViewMatrix() * camera.m_Camera.GetProjMatrix();
+                const auto  CameraView     = camera.m_Camera.GetViewMatrix() * SrfPreTransform;
+                const auto& CameraWorld    = camera.m_Camera.GetWorldMatrix();
+                float3      CameraWorldPos = float3::MakeVector(CameraWorld[3]);
+                const auto& Proj           = camera.m_Camera.GetProjMatrix();
 
-                CameraAttribs CameraAttribsB;
-                CameraAttribsB.mViewT        = camera.m_Camera.GetViewMatrix().Transpose();
-                CameraAttribsB.mProjT        = camera.m_Camera.GetProjMatrix().Transpose();
-                CameraAttribsB.mViewProjT    = mViewProj.Transpose();
-                CameraAttribsB.mViewProjInvT = mViewProj.Inverse().Transpose();
-                float fNearPlane = 0.f, fFarPlane = 0.f;
-                camera.m_Camera.GetProjMatrix().GetNearFarClipPlanes(fNearPlane, fFarPlane, m_bIsGLDevice);
-                CameraAttribsB.fNearPlaneZ      = fNearPlane;
-                CameraAttribsB.fFarPlaneZ       = fFarPlane * 0.999999f;
-                CameraAttribsB.f4Position       = camera.m_Camera.GetPos();
-                CameraAttribsB.f4ViewportSize.x = static_cast<float>(pSwapChain->GetDesc().Width);
-                CameraAttribsB.f4ViewportSize.y = static_cast<float>(pSwapChain->GetDesc().Height);
-                CameraAttribsB.f4ViewportSize.z = 1.f / CameraAttribsB.f4ViewportSize.x;
-                CameraAttribsB.f4ViewportSize.w = 1.f / CameraAttribsB.f4ViewportSize.y;
+                auto CameraViewProj = CameraView * Proj;
 
                 {
-                    //MapHelper<CameraAttribs> CamAttribsCBData(pContext, camera.m_pcbCameraAttribs, MAP_WRITE, MAP_FLAG_DISCARD);
-                    //*CamAttribsCBData = CameraAttribsB;
-                } {
                     MapHelper<CameraAttribs> CamAttribs(pContext, m_CameraAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
-                    *CamAttribs = CameraAttribsB;
+                    CamAttribs->mProjT        = Proj.Transpose();
+                    CamAttribs->mViewProjT    = CameraViewProj.Transpose();
+                    CamAttribs->mViewProjInvT = CameraViewProj.Inverse().Transpose();
+                    CamAttribs->f4Position    = float4(CameraWorldPos, 1);
                 }
+
+                ExtractViewFrustumPlanesFromMatrix(CameraViewProj, Frutstum, pDevice->GetDeviceInfo().IsGLDevice());
             }
         }
 
@@ -409,6 +400,68 @@ GLTF_PBR_Renderer::ModelResourceBindings Renderer::CreateResourceBindings(GLTF::
                                                                           IBuffer*     pLightAttribs)
 {
     return m_GLTFRenderer->CreateResourceBindings(GLTFModel, pCameraAttribs, pLightAttribs);
+}
+
+float4x4 Renderer::GetAdjustedProjectionMatrix(float FOV, float NearPlane, float FarPlane) const
+{
+    const auto& SCDesc = pSwapChain->GetDesc();
+
+    float AspectRatio = static_cast<float>(SCDesc.Width) / static_cast<float>(SCDesc.Height);
+    float XScale, YScale;
+    if (SCDesc.PreTransform == SURFACE_TRANSFORM_ROTATE_90 ||
+        SCDesc.PreTransform == SURFACE_TRANSFORM_ROTATE_270 ||
+        SCDesc.PreTransform == SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_90 ||
+        SCDesc.PreTransform == SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_270)
+    {
+        // When the screen is rotated, vertical FOV becomes horizontal FOV
+        XScale = 1.f / std::tan(FOV / 2.f);
+        // Aspect ratio is inversed
+        YScale = XScale * AspectRatio;
+    }
+    else
+    {
+        YScale = 1.f / std::tan(FOV / 2.f);
+        XScale = YScale / AspectRatio;
+    }
+
+    float4x4 Proj;
+    Proj._11 = XScale;
+    Proj._22 = YScale;
+    Proj.SetNearFarClipPlanes(NearPlane, FarPlane, pDevice->GetDeviceInfo().IsGLDevice());
+    return Proj;
+}
+
+float4x4 Renderer::GetSurfacePretransformMatrix(const float3& f3CameraViewAxis) const
+{
+    const auto& SCDesc = pSwapChain->GetDesc();
+    switch (SCDesc.PreTransform)
+    {
+        case SURFACE_TRANSFORM_ROTATE_90:
+            // The image content is rotated 90 degrees clockwise.
+            return float4x4::RotationArbitrary(f3CameraViewAxis, -PI_F / 2.f);
+
+        case SURFACE_TRANSFORM_ROTATE_180:
+            // The image content is rotated 180 degrees clockwise.
+            return float4x4::RotationArbitrary(f3CameraViewAxis, -PI_F);
+
+        case SURFACE_TRANSFORM_ROTATE_270:
+            // The image content is rotated 270 degrees clockwise.
+            return float4x4::RotationArbitrary(f3CameraViewAxis, -PI_F * 3.f / 2.f);
+
+        case SURFACE_TRANSFORM_OPTIMAL:
+            UNEXPECTED("SURFACE_TRANSFORM_OPTIMAL is only valid as parameter during swap chain initialization.");
+            return float4x4::Identity();
+
+        case SURFACE_TRANSFORM_HORIZONTAL_MIRROR:
+        case SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_90:
+        case SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_180:
+        case SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_270:
+            UNEXPECTED("Mirror transforms are not supported");
+            return float4x4::Identity();
+
+        default:
+            return float4x4::Identity();
+    }
 }
 
 } // namespace Vision

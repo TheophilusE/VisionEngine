@@ -192,27 +192,6 @@ void Scene::Update(Diligent::InputController& controller, IRenderDevice* pDevice
             if (camera.Active)
             {
                 camera.m_Camera.Update(controller, dt);
-
-                float  fEarthRadius = AirScatteringAttribs().fEarthRadius;
-                float3 EarthCenter(0, -fEarthRadius, 0);
-                float  fNearPlaneZ, fFarPlaneZ;
-                float  m_fMinElevation = 0.0f;
-                float  m_fMaxElevation = 0.0f;
-
-                ComputeApproximateNearFarPlaneDist(camera.m_Camera.GetPos(),
-                                                   camera.m_Camera.GetViewMatrix(),
-                                                   mTmpProj,
-                                                   EarthCenter,
-                                                   fEarthRadius,
-                                                   fEarthRadius + m_fMinElevation,
-                                                   fEarthRadius + m_fMaxElevation,
-                                                   fNearPlaneZ,
-                                                   fFarPlaneZ);
-                fNearPlaneZ = std::max(fNearPlaneZ, 50.f) * 0.001f;
-                fFarPlaneZ  = std::max(fFarPlaneZ, fNearPlaneZ + 100.f);
-                fFarPlaneZ  = std::max(fFarPlaneZ, 1000.f);
-
-                camera.m_Camera.SetProjAttribs(fNearPlaneZ, fFarPlaneZ, aspectRatio, FOV, SURFACE_TRANSFORM_IDENTITY, m_bIsGLDevice);
             }
         }
 
@@ -235,7 +214,7 @@ void Scene::Update(Diligent::InputController& controller, IRenderDevice* pDevice
         for (auto entity : viewTransformModel)
         {
             auto& transform = viewTransformModel.get<TransformComponent>(entity);
-            auto& model = viewTransformModel.get<MeshComponent>(entity);
+            auto& model     = viewTransformModel.get<MeshComponent>(entity);
 
             model.m_RenderParams.ModelTransform = transform.GetTransform();
         }

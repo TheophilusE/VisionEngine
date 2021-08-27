@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "imGuIZMO.h"
 #include "ImGuiUtils.hpp"
+#include <math.h>
 
 namespace Diligent
 {
@@ -63,10 +64,10 @@ void VisionApp::UpdateUI()
     }
 
     {
-        auto& light = m_DirectionalLight.GetComponent<DirectionalLightComponent>();
-        auto& m     = m_Helmet.GetComponent<MeshComponent>();
-        auto& t     = m_Helmet.GetComponent<TransformComponent>();
-        auto& c     = m_Camera.GetComponent<CameraComponent>();
+        auto& light  = m_DirectionalLight.GetComponent<DirectionalLightComponent>();
+        auto& m      = m_Helmet.GetComponent<MeshComponent>();
+        auto& t      = m_Helmet.GetComponent<TransformComponent>();
+        auto& camera = m_Camera.GetComponent<CameraComponent>();
 
         ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
         if (ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
@@ -88,6 +89,63 @@ void VisionApp::UpdateUI()
                 ImGui::gizmo3D("Model Rotation", t.Rotation, ImGui::GetTextLineHeight() * 10);
                 ImGui::SameLine();
                 ImGui::gizmo3D("Light direction", light.m_LightDirection, ImGui::GetTextLineHeight() * 10);
+            }
+
+            {
+                if (ImGui::Button("Reset view"))
+                {
+                    camera.m_Camera.SetPos(float3{});
+                    camera.m_Camera.SetRotation(0.f, 0.f);
+                    t.Translation = float3{};
+                    t.Rotation    = Quaternion::RotationFromAxisAngle(float3{0.f, 1.0f, 0.0f}, -PI_F / 2.f);
+                }
+
+                if (ImGui::TreeNode("Camera Settings"))
+                {
+                    /*
+                        Link - https://dopeguides.com/field-of-view-calculator-camera/#:~:text=%20Field%20of%20View%20%3D%202%20%28Tan%20%28Angle,of%20view%20has%20never%20been%20easier%20than%20this.
+                        Link - https://www.studiobinder.com/blog/camera-sensor-size/#:~:text=Sensor%20size%20chart%201%20Full%20Frame%2036mm%20by,8mm%20sensor%20with%20a%202.7x%20crop%20factor.%20
+                        Field angle of view = 2 x arctan ((sensor dimension eg: width/(2x focal length)) * (180/Π)
+                        Field of View = 2 (Tan (Angle of view/2) X linear distance to the object being captured)
+
+                        Camera Dimensions: 36mm by 24mm.
+                        Camera Focal Length: 10mm to 500mm.
+
+                        Lenses
+                        - 36 by 24
+                        - 27.9 by 18.6
+                        - 23.6 by 15.67
+                        - 22.2 by 14.8
+                        - 18.7 by 14.0
+                        - 17.3 by 13
+                        - 12.8 by 9.6
+                        - 10.67 by 8
+                        - 8.8 by 6.6
+                        - 7.6 by 5.7
+                        - 6.17 by 4.55
+                        - 4.54 by 3.42
+                    */
+                    float   nearClip        = camera.m_Camera.GetProjAttribs().NearClipPlane;
+                    float   farClip         = camera.m_Camera.GetProjAttribs().FarClipPlane;
+                    float2& sensorDimension = camera.sensorDimension; // mm
+                    float&  focalLength     = camera.focalLength;     // mm
+                    float&  linearDistance  = camera.linearDistance;
+                    float   angleOfView     = 2.f * atan(sensorDimension.x / (2.f * focalLength)) * (180.f / PI_F);
+                    float   fieldOfView     = 2.f * (angleOfView / 2.f) * linearDistance;
+                    Float32 fov             = fieldOfView;
+
+                    ImGui::SliderFloat("Sensor Dimension Width", &sensorDimension.x, 4.54f, 36.f);
+                    ImGui::SliderFloat("Sensor Dimension Height", &sensorDimension.y, 3.42f, 24.f);
+                    ImGui::SliderFloat("Camera Focal Length", &focalLength, 10.f, 500.f);
+                    ImGui::SliderFloat("Camera Linear Distance", &linearDistance, 1.f, 10000.f);
+                    ImGui::SliderFloat("Camera Near Clip", &nearClip, 0.01f, 10000.f);
+                    ImGui::SliderFloat("Camera Far Clip", &farClip, 1.f, 10000.f);
+
+                    camera.m_Camera.SetProjAttribs(nearClip, farClip, camera.m_Camera.GetProjAttribs().AspectRatio, fov,
+                                                   m_pSwapChain->GetDesc().PreTransform, m_pDevice->GetDeviceInfo().IsGLDevice());
+
+                    ImGui::TreePop();
+                }
             }
 
             if (ImGui::TreeNode("Environment Settings"))
@@ -179,16 +237,6 @@ void VisionApp::UpdateUI()
             }
 
             {
-                if (ImGui::Button("Reset view"))
-                {
-                    c.m_Camera.SetPos(float3{});
-                    c.m_Camera.SetRotation(0.f, 0.f);
-                    t.Translation = float3{};
-                    t.Rotation    = Quaternion::RotationFromAxisAngle(float3{0.f, 1.0f, 0.0f}, -PI_F / 2.f);
-                }
-            }
-
-            {
                 if (!m.m_Model->Animations.empty())
                 {
                     ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
@@ -245,5 +293,23 @@ void VisionApp::WindowResize(Uint32 Width, Uint32 Height)
 
     ApplicationBase::WindowResize(Width, Height);
     m_Renderer.CreateMSAARenderTarget();
+
+    auto& scenes = Scene::FindAllScenes();
+
+    for (int i = 0; i < scenes.size(); ++i)
+    {
+        auto& pRegistry  = scenes[i]->GetSceneRegistry();
+        auto  viewCamera = pRegistry.view<CameraComponent>();
+
+        // Update Camera
+        for (auto entity : viewCamera)
+        {
+            auto& camera = viewCamera.get<CameraComponent>(entity);
+
+            float AspectRatio = static_cast<float>(Width) / static_cast<float>(Height);
+            camera.m_Camera.SetProjAttribs(camera.m_Camera.GetProjAttribs().NearClipPlane, camera.m_Camera.GetProjAttribs().FarClipPlane, AspectRatio, PI_F / 4.f,
+                                           m_pSwapChain->GetDesc().PreTransform, m_pDevice->GetDeviceInfo().IsGLDevice());
+        }
+    }
 }
 } // namespace Vision

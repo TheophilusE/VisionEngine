@@ -3,7 +3,7 @@
 
 #include "GLTFLoader.hpp"
 #include "GLTF_PBR_Renderer.hpp"
-#include "BasicMath.hpp"
+#include "AdvancedMath.hpp"
 #include "ShadowMapManager.hpp"
 
 #include "../FrameWork/Scene.h"
@@ -72,6 +72,13 @@ protected:
     RefCntAutoPtr<ITextureView>     m_pMSColorRTV;
     RefCntAutoPtr<ITextureView>     m_pMSDepthDSV;
     static constexpr TEXTURE_FORMAT DepthBufferFormat = TEX_FORMAT_D32_FLOAT;
+
+protected:
+    // Returns projection matrix adjusted to the current screen orientation
+    float4x4 GetAdjustedProjectionMatrix(float FOV, float NearPlane, float FarPlane) const;
+
+    // Returns pretransform matrix that matches the current screen rotation
+    float4x4 GetSurfacePretransformMatrix(const float3& f3CameraViewAxis) const;
 
 private:
     IEngineFactory* pEngineFactory;

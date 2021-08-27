@@ -94,9 +94,11 @@ struct CameraComponent
     CameraComponent()                       = default;
     CameraComponent(const CameraComponent&) = default;
 
-    bool                   Active = true;
-    FirstPersonCamera      m_Camera;
-    RefCntAutoPtr<IBuffer> m_pcbCameraAttribs;
+    bool              Active          = true;
+    float2            sensorDimension = {36.f, 24.f}; // mm
+    float             focalLength     = 43.27f;       // mm
+    float             linearDistance  = 1.f;
+    FirstPersonCamera m_Camera;
 };
 
 struct MeshComponent
