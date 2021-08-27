@@ -22,6 +22,25 @@ struct RenderSettings
     Uint32 m_SupportedSampleCounts = 0;
 };
 
+struct ShadowSettings
+{
+    bool           SnapCascades            = true;
+    bool           StabilizeExtents        = true;
+    bool           EqualizeExtents         = true;
+    bool           SearchBestCascade       = true;
+    bool           FilterAcrossCascades    = true;
+    int            Resolution              = 2048;
+    float          PartitioningFactor      = 0.95f;
+    int            m_iNumShadowCascades    = 6;
+    int            m_bBestCascadeSearch    = 1;
+    int            m_FixedShadowFilterSize = 5;
+    TEXTURE_FORMAT ShadowMapFormat         = TEX_FORMAT_D16_UNORM;
+    TEXTURE_FORMAT DstRTVFormat            = TEX_FORMAT_R11G11B10_FLOAT;
+    int            iShadowMode             = SHADOW_MODE_PCF;
+
+    bool Is32BitFilterableFmt = true;
+};
+
 class Renderer
 {
 public:
@@ -42,6 +61,7 @@ public:
     RefCntAutoPtr<IBuffer>         GetLightAttribs() { return m_LightAttribsCB; }
     GLTF_PBR_Renderer::RenderInfo& GetRenderParams() { return m_RenderParams; }
     RenderSettings&                GetRenderSettings() { return m_RenderSettings; }
+    ShadowSettings&                GetShadowSettings() { return m_ShadowSettings; }
 
     enum class BackgroundMode : int
     {
@@ -63,6 +83,7 @@ protected:
     RefCntAutoPtr<IBuffer> m_CameraAttribsCB;
     RefCntAutoPtr<IBuffer> m_LightAttribsCB;
     RenderSettings         m_RenderSettings;
+    ShadowSettings         m_ShadowSettings;
 
     bool                                 m_bUseResourceCache = false;
     RefCntAutoPtr<GLTF::ResourceManager> m_pResourceMgr;
@@ -72,6 +93,11 @@ protected:
     RefCntAutoPtr<ITextureView>     m_pMSColorRTV;
     RefCntAutoPtr<ITextureView>     m_pMSDepthDSV;
     static constexpr TEXTURE_FORMAT DepthBufferFormat = TEX_FORMAT_D32_FLOAT;
+
+    // ShadowMap
+    ShadowMapManager        m_ShadowMapMgr;
+    RefCntAutoPtr<ISampler> m_pComparisonSampler;
+    RefCntAutoPtr<ISampler> m_pFilterableShadowMapSampler;
 
 protected:
     // Returns projection matrix adjusted to the current screen orientation

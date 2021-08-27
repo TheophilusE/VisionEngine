@@ -69,6 +69,8 @@ set(SHADERS
     assets/shaders/BoundBox.psh
     assets/shaders/env_map.vsh
     assets/shaders/env_map.psh
+    assets/shaders/MeshVS.vsh
+    assets/shaders/MeshPS.psh
     ../../DiligentFX/Shaders/Common/public/Shadows.fxh
     assets/shaders/HostSharedTerrainStructs.fxh
 	../../DiligentFX/Shaders/PostProcess/EpipolarLightScattering/public/EpipolarLightScatteringStructures.fxh
