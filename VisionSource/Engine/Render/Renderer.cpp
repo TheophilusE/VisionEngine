@@ -261,8 +261,121 @@ void Renderer::CreateMSAARenderTarget()
     m_pMSDepthDSV = pDepth->GetDefaultView(TEXTURE_VIEW_DEPTH_STENCIL);
 }
 
+void Renderer::CreateShadowMap()
+{
+    auto& scenes = Scene::FindAllScenes();
+
+    for (int i = 0; i < scenes.size(); ++i)
+    {
+        auto& pRegistry            = scenes[i]->GetSceneRegistry();
+        auto  viewDirectionalLight = pRegistry.view<DirectionalLightComponent>();
+
+        // Render Directional Light
+        for (auto entity : viewDirectionalLight)
+        {
+            auto& light = viewDirectionalLight.get<DirectionalLightComponent>(entity);
+            {
+                if (m_ShadowSettings.Resolution >= 2048)
+                    light.m_LightAttribs.ShadowAttribs.fFixedDepthBias = 0.0025f;
+                else if (m_ShadowSettings.Resolution >= 1024)
+                    light.m_LightAttribs.ShadowAttribs.fFixedDepthBias = 0.005f;
+                else
+                    light.m_LightAttribs.ShadowAttribs.fFixedDepthBias = 0.0075f;
+
+                ShadowMapManager::InitInfo SMMgrInitInfo;
+                SMMgrInitInfo.Format               = m_ShadowSettings.ShadowMapFormat;
+                SMMgrInitInfo.Resolution           = m_ShadowSettings.Resolution;
+                SMMgrInitInfo.NumCascades          = static_cast<Uint32>(light.m_LightAttribs.ShadowAttribs.iNumCascades);
+                SMMgrInitInfo.ShadowMode           = m_ShadowSettings.iShadowMode;
+                SMMgrInitInfo.Is32BitFilterableFmt = m_ShadowSettings.Is32BitFilterableFmt;
+
+                if (!m_pComparisonSampler)
+                {
+                    SamplerDesc ComparsionSampler;
+                    ComparsionSampler.ComparisonFunc = COMPARISON_FUNC_LESS;
+                    // Note: anisotropic filtering requires SampleGrad to fix artifacts at
+                    // cascade boundaries
+                    ComparsionSampler.MinFilter = FILTER_TYPE_COMPARISON_LINEAR;
+                    ComparsionSampler.MagFilter = FILTER_TYPE_COMPARISON_LINEAR;
+                    ComparsionSampler.MipFilter = FILTER_TYPE_COMPARISON_LINEAR;
+                    pDevice->CreateSampler(ComparsionSampler, &m_pComparisonSampler);
+                }
+                SMMgrInitInfo.pComparisonSampler = m_pComparisonSampler;
+
+                if (!m_pFilterableShadowMapSampler)
+                {
+                    SamplerDesc SamplerDesc;
+                    SamplerDesc.MinFilter     = FILTER_TYPE_ANISOTROPIC;
+                    SamplerDesc.MagFilter     = FILTER_TYPE_ANISOTROPIC;
+                    SamplerDesc.MipFilter     = FILTER_TYPE_ANISOTROPIC;
+                    SamplerDesc.MaxAnisotropy = light.m_LightAttribs.ShadowAttribs.iMaxAnisotropy;
+                    pDevice->CreateSampler(SamplerDesc, &m_pFilterableShadowMapSampler);
+                }
+
+                SMMgrInitInfo.pFilterableShadowMapSampler = m_pFilterableShadowMapSampler;
+                m_ShadowMapMgr.Initialize(pDevice, SMMgrInitInfo);
+                // InitializeResourceBindings();
+            }
+        }
+    }
+}
+
+void Renderer::RenderShadowMap()
+{
+    auto& scenes = Scene::FindAllScenes();
+
+    for (int i = 0; i < scenes.size(); ++i)
+    {
+        auto& pRegistry    = scenes[i]->GetSceneRegistry();
+        auto  viewCamera   = pRegistry.view<CameraComponent>();
+        auto  viewDirLight = pRegistry.view<DirectionalLightComponent>();
+
+        for (auto entityLight : viewDirLight)
+        {
+            auto& light = viewDirLight.get<DirectionalLightComponent>(entityLight);
+
+            auto iNumShadowCascades = light.m_LightAttribs.ShadowAttribs.iNumCascades;
+            for (int iCascade = 0; iCascade < iNumShadowCascades; ++iCascade)
+            {
+                const auto CascadeProjMatr = m_ShadowMapMgr.GetCascadeTranform(iCascade).Proj;
+
+                auto WorldToLightViewSpaceMatr = light.m_LightAttribs.ShadowAttribs.mWorldToLightViewT.Transpose();
+                auto WorldToLightProjSpaceMatr = WorldToLightViewSpaceMatr * CascadeProjMatr;
+
+                CameraAttribs ShadowCameraAttribs = {};
+
+                ShadowCameraAttribs.mViewT     = light.m_LightAttribs.ShadowAttribs.mWorldToLightViewT;
+                ShadowCameraAttribs.mProjT     = CascadeProjMatr.Transpose();
+                ShadowCameraAttribs.mViewProjT = WorldToLightProjSpaceMatr.Transpose();
+
+                ShadowCameraAttribs.f4ViewportSize.x = static_cast<float>(m_ShadowSettings.Resolution);
+                ShadowCameraAttribs.f4ViewportSize.y = static_cast<float>(m_ShadowSettings.Resolution);
+                ShadowCameraAttribs.f4ViewportSize.z = 1.f / ShadowCameraAttribs.f4ViewportSize.x;
+                ShadowCameraAttribs.f4ViewportSize.w = 1.f / ShadowCameraAttribs.f4ViewportSize.y;
+
+                {
+                    MapHelper<CameraAttribs> CameraData(pContext, m_CameraAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
+                    *CameraData = ShadowCameraAttribs;
+                }
+
+                auto* pCascadeDSV = m_ShadowMapMgr.GetCascadeDSV(iCascade);
+                pContext->SetRenderTargets(0, nullptr, pCascadeDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+                pContext->ClearDepthStencil(pCascadeDSV, CLEAR_DEPTH_FLAG, 1.f, 0, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+
+                ViewFrustumExt Frutstum;
+                ExtractViewFrustumPlanesFromMatrix(WorldToLightProjSpaceMatr, Frutstum, pDevice->GetDeviceInfo().IsGLDevice());
+            }
+
+            if (m_ShadowSettings.iShadowMode > SHADOW_MODE_PCF)
+                m_ShadowMapMgr.ConvertToFilterable(pContext, light.m_LightAttribs.ShadowAttribs);
+        }
+    }
+}
+
 void Renderer::Render()
 {
+    RenderShadowMap();
+
     ITextureView* pRTV = nullptr;
     ITextureView* pDSV = nullptr;
     if (m_RenderSettings.m_SampleCount > 1 && m_RenderSettings.m_UseMSAA)
@@ -296,6 +409,18 @@ void Renderer::Render()
         auto  viewCamera           = pRegistry.view<CameraComponent>();
         auto  viewModel            = pRegistry.view<MeshComponent>();
 
+        // Render Directional Light
+        for (auto entity : viewDirectionalLight)
+        {
+            // Ex. auto &vel = view.get<pos, velocity>(entity);
+            auto& dirLight = viewDirectionalLight.get<DirectionalLightComponent>(entity);
+            {
+                MapHelper<LightAttribs> lightAttribs(pContext, m_LightAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
+                lightAttribs->f4Direction = dirLight.m_LightDirection;
+                lightAttribs->f4Intensity = dirLight.GetIntensity();
+            }
+        }
+
         // Render Camera
         for (auto entity : viewCamera)
         {
@@ -321,18 +446,6 @@ void Renderer::Render()
                 }
 
                 ExtractViewFrustumPlanesFromMatrix(CameraViewProj, Frutstum, pDevice->GetDeviceInfo().IsGLDevice());
-            }
-        }
-
-        // Render Directional Light
-        for (auto entity : viewDirectionalLight)
-        {
-            // Ex. auto &vel = view.get<pos, velocity>(entity);
-            auto& dirLight = viewDirectionalLight.get<DirectionalLightComponent>(entity);
-            {
-                MapHelper<LightAttribs> lightAttribs(pContext, m_LightAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
-                lightAttribs->f4Direction = dirLight.m_LightDirection;
-                lightAttribs->f4Intensity = dirLight.GetIntensity();
             }
         }
 

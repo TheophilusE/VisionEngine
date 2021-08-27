@@ -46,8 +46,16 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
     m_DirectionalLight = m_Scene->CreateEntity("Directional Light Component");
     m_Helmet           = m_Scene->CreateEntity("Helmet");
 
-    m_DirectionalLight.AddComponent<DirectionalLightComponent>();
+    auto& light = m_DirectionalLight.AddComponent<DirectionalLightComponent>();
     m_Camera.AddComponent<CameraComponent>();
+
+    light.m_LightAttribs.ShadowAttribs.iNumCascades     = 4;
+    light.m_LightAttribs.ShadowAttribs.fFixedDepthBias  = 0.0025f;
+    light.m_LightAttribs.ShadowAttribs.iFixedFilterSize = 5;
+    light.m_LightAttribs.ShadowAttribs.fFilterWorldSize = 0.1f;
+
+    m_Renderer.CreateShadowMap();
+
     auto& m = m_Helmet.AddComponent<MeshComponent>();
     m.LoadModel("models/DamagedHelmet/DamagedHelmet.gltf", m_Renderer);
     //auto& t = m_Helmet.GetComponent<TransformComponent>();

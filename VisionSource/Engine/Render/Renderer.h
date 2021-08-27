@@ -52,6 +52,8 @@ public:
                                                                     IBuffer*     pCameraAttribs,
                                                                     IBuffer*     pLightAttribs);
     void                                     CreateMSAARenderTarget();
+    void                                     CreateShadowMap();
+    void                                     RenderShadowMap();
 
     IEngineFactory*                GetEngineFactory() { return pEngineFactory; }
     IRenderDevice*                 GetRenderDevice() { return pDevice; }
