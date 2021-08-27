@@ -55,6 +55,7 @@ public:
     void                                     CreateShadowMap();
     void                                     RenderShadowMap();
     void                                     CreatePipelineStates();
+    void                                     InitializeResourceBindings();
 
     IEngineFactory*                GetEngineFactory() { return pEngineFactory; }
     IRenderDevice*                 GetRenderDevice() { return pDevice; }

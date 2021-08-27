@@ -159,9 +159,15 @@ void VisionApp::UpdateUI()
                     ImGui::SliderFloat("Camera Linear Distance", &linearDistance, 0.001f, 10.f);
                     ImGui::SliderFloat("Camera Near Clip", &nearClip, 0.01f, 10000.f);
                     ImGui::SliderFloat("Camera Far Clip", &farClip, 1.f, 10000.f);
+                    ImGui::SliderFloat("Camera Speed", &camera.speed, 0.f, 1000.f);
+                    ImGui::SliderFloat("Camera Speed Scale", &camera.speedScale, 0.f, 1000000.f);
+                    ImGui::SliderFloat("Camera Rotation Scale", &camera.rotationScale, 0.001f, 1.f);
 
                     camera.m_Camera.SetProjAttribs(nearClip, farClip, camera.m_Camera.GetProjAttribs().AspectRatio, fov,
                                                    m_pSwapChain->GetDesc().PreTransform, m_pDevice->GetDeviceInfo().IsGLDevice());
+                    camera.m_Camera.SetMoveSpeed(camera.speed);
+                    camera.m_Camera.SetSpeedUpScales(camera.speedScale, camera.superSpeedScale);
+                    camera.m_Camera.SetRotationSpeed(camera.rotationScale);
 
                     ImGui::TreePop();
                 }

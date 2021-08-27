@@ -317,6 +317,11 @@ void Renderer::CreatePipelineStates()
     }
 }
 
+void Renderer::InitializeResourceBindings()
+{
+
+}
+
 void Renderer::CreateShadowMap()
 {
     auto& scenes = Scene::FindAllScenes();
@@ -370,7 +375,7 @@ void Renderer::CreateShadowMap()
 
                 SMMgrInitInfo.pFilterableShadowMapSampler = m_pFilterableShadowMapSampler;
                 m_ShadowMapMgr.Initialize(pDevice, SMMgrInitInfo);
-                // InitializeResourceBindings();
+                InitializeResourceBindings();
             }
         }
     }

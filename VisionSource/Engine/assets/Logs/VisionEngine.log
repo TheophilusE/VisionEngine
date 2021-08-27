@@ -1,17 +1,17 @@
-[14:43:36] [info] VISION ENGINE: Input enabled
-[14:43:37] [info] VISION ENGINE: Registered 1 more input schemes on top of 0 existing ones
-[14:43:37] [info] VISION ENGINE: Pushed input scheme: DefaultInputScheme
-[14:43:37] [info] VISION ENGINE: Input enabled
-[14:43:40] [info] VISION ENGINE: Added A Transform Component
-[14:43:40] [info] VISION ENGINE: Added A Bounding Box Component
-[14:43:40] [info] VISION ENGINE: Added A Tag Component
-[14:43:40] [info] VISION ENGINE: Added A Transform Component
-[14:43:40] [info] VISION ENGINE: Added A Bounding Box Component
-[14:43:40] [info] VISION ENGINE: Added A Tag Component
-[14:43:40] [info] VISION ENGINE: Added A Transform Component
-[14:43:40] [info] VISION ENGINE: Added A Bounding Box Component
-[14:43:40] [info] VISION ENGINE: Added A Tag Component
-[14:43:40] [info] VISION ENGINE: Added A Directional Light Component
-[14:43:40] [info] VISION ENGINE: Added A Camera Component
-[14:43:40] [info] VISION ENGINE: Added A Mesh Component
-[14:57:16] [info] VISION ENGINE: Deleted scene: MainScene # 2
+[17:35:16] [info] VISION ENGINE: Input enabled
+[17:35:16] [info] VISION ENGINE: Registered 1 more input schemes on top of 0 existing ones
+[17:35:16] [info] VISION ENGINE: Pushed input scheme: DefaultInputScheme
+[17:35:16] [info] VISION ENGINE: Input enabled
+[17:35:18] [info] VISION ENGINE: Added A Transform Component
+[17:35:18] [info] VISION ENGINE: Added A Bounding Box Component
+[17:35:18] [info] VISION ENGINE: Added A Tag Component
+[17:35:18] [info] VISION ENGINE: Added A Transform Component
+[17:35:18] [info] VISION ENGINE: Added A Bounding Box Component
+[17:35:18] [info] VISION ENGINE: Added A Tag Component
+[17:35:18] [info] VISION ENGINE: Added A Transform Component
+[17:35:18] [info] VISION ENGINE: Added A Bounding Box Component
+[17:35:18] [info] VISION ENGINE: Added A Tag Component
+[17:35:18] [info] VISION ENGINE: Added A Directional Light Component
+[17:35:18] [info] VISION ENGINE: Added A Camera Component
+[17:35:18] [info] VISION ENGINE: Added A Mesh Component
+[17:37:28] [info] VISION ENGINE: Deleted scene: MainScene # 2

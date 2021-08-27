@@ -95,10 +95,16 @@ struct CameraComponent
     CameraComponent()                       = default;
     CameraComponent(const CameraComponent&) = default;
 
-    bool              Active          = true;
-    float2            sensorDimension = {0.036f, 0.024f}; // mm
-    float             focalLength     = 0.04327f;         // mm
-    float             linearDistance  = 0.001f;
+    bool   Active          = true;
+    float2 sensorDimension = {0.036f, 0.024f}; // mm
+    float  focalLength     = 0.04327f;         // mm
+    float  linearDistance  = 0.1f;
+
+    float speed           = 1.f;
+    float speedScale      = 5.f;
+    float superSpeedScale = 10.f;
+    float rotationScale   = 0.01f;
+
     FirstPersonCamera m_Camera;
 };
 
