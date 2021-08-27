@@ -6,6 +6,13 @@
 #include "ImGuiUtils.hpp"
 #include <math.h>
 
+
+/*
+* TODO
+* - Add editor for camera speed 
+* - Add Editor for environment map attribs - tonemapping and auto exposire
+*/
+
 namespace Diligent
 {
 SampleBase* CreateSample()
@@ -48,16 +55,20 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
 
     auto& light = m_DirectionalLight.AddComponent<DirectionalLightComponent>();
     m_Camera.AddComponent<CameraComponent>();
+    m_Helmet.AddComponent<MeshComponent>();
 
     light.m_LightAttribs.ShadowAttribs.iNumCascades     = 4;
     light.m_LightAttribs.ShadowAttribs.fFixedDepthBias  = 0.0025f;
     light.m_LightAttribs.ShadowAttribs.iFixedFilterSize = 5;
     light.m_LightAttribs.ShadowAttribs.fFilterWorldSize = 0.1f;
 
-    m_Renderer.CreateShadowMap();
+    light.m_LightAttribs.f4Direction    = float3(-0.522699475f, -0.481321275f, -0.703671455f);
+    light.m_LightAttribs.f4Intensity    = float4(1, 0.8f, 0.5f, 1);
+    light.m_LightAttribs.f4AmbientLight = float4(0.125f, 0.125f, 0.125f, 1);
 
-    auto& m = m_Helmet.AddComponent<MeshComponent>();
-    m.LoadModel("models/DamagedHelmet/DamagedHelmet.gltf", m_Renderer);
+    m_Renderer.CreatePipelineStates();
+    m_Renderer.CreateShadowMap();
+    //m.LoadModel("models/DamagedHelmet/DamagedHelmet.gltf", m_Renderer);
     //auto& t = m_Helmet.GetComponent<TransformComponent>();
     //t.Rotation = t.Rotation.RotationFromAxisAngle(float3{0.f, 0.f, 1.f}, 120.f) * t.Rotation;
 }
@@ -183,7 +194,7 @@ void VisionApp::UpdateUI()
                     }
 
                     {
-                        std::array<const char*, static_cast<size_t>(Renderer::BackgroundMode::NumModes)> BackgroundModes;
+                        Array<const char*, static_cast<size_t>(Renderer::BackgroundMode::NumModes)> BackgroundModes;
                         BackgroundModes[static_cast<size_t>(Renderer::BackgroundMode::None)]              = "None";
                         BackgroundModes[static_cast<size_t>(Renderer::BackgroundMode::EnvironmentMap)]    = "Environment Map";
                         BackgroundModes[static_cast<size_t>(Renderer::BackgroundMode::Irradiance)]        = "Irradiance";
@@ -245,17 +256,20 @@ void VisionApp::UpdateUI()
             }
 
             {
-                if (!m.m_Model->Animations.empty())
+                if (m.m_Model != nullptr)
                 {
-                    ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
-                    if (ImGui::TreeNode("Model Animation"))
+                    if (!m.m_Model->Animations.empty())
                     {
-                        ImGui::Checkbox("Play Animation", &m.m_PlayAnimation);
-                        Vector<const char*> Animations(m.m_Model->Animations.size());
-                        for (size_t i = 0; i < m.m_Model->Animations.size(); ++i)
-                            Animations[i] = m.m_Model->Animations[i].Name.c_str();
-                        ImGui::Combo("Current Animation", reinterpret_cast<int*>(&m.m_AnimationIndex), Animations.data(), static_cast<int>(Animations.size()));
-                        ImGui::TreePop();
+                        ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
+                        if (ImGui::TreeNode("Model Animation"))
+                        {
+                            ImGui::Checkbox("Play Animation", &m.m_PlayAnimation);
+                            Vector<const char*> Animations(m.m_Model->Animations.size());
+                            for (size_t i = 0; i < m.m_Model->Animations.size(); ++i)
+                                Animations[i] = m.m_Model->Animations[i].Name.c_str();
+                            ImGui::Combo("Current Animation", reinterpret_cast<int*>(&m.m_AnimationIndex), Animations.data(), static_cast<int>(Animations.size()));
+                            ImGui::TreePop();
+                        }
                     }
                 }
             }
@@ -274,6 +288,25 @@ void VisionApp::Update(double CurrTime, double ElapsedTime)
     UpdateUI();
 
     m_Scene->Update(m_InputController, m_Renderer.GetRenderDevice(), m_Renderer.GetSwapChain(), static_cast<float>(ElapsedTime));
+
+    auto& light  = m_DirectionalLight.GetComponent<DirectionalLightComponent>();
+    auto& camera = m_Camera.GetComponent<CameraComponent>();
+
+    // Update Shadow Map
+    {
+        ShadowMapManager::DistributeCascadeInfo DistrInfo;
+        DistrInfo.pCameraView   = &camera.m_Camera.GetViewMatrix();
+        DistrInfo.pCameraProj   = &camera.m_Camera.GetProjMatrix();
+        float3 f3LightDirection = float3(light.m_LightAttribs.f4Direction.x, light.m_LightAttribs.f4Direction.y, light.m_LightAttribs.f4Direction.z);
+        DistrInfo.pLightDir     = &f3LightDirection;
+
+        DistrInfo.fPartitioningFactor = m_Renderer.GetShadowSettings().PartitioningFactor;
+        DistrInfo.SnapCascades        = m_Renderer.GetShadowSettings().SnapCascades;
+        DistrInfo.EqualizeExtents     = m_Renderer.GetShadowSettings().EqualizeExtents;
+        DistrInfo.StabilizeExtents    = m_Renderer.GetShadowSettings().StabilizeExtents;
+
+        m_Renderer.GetShadowMapManager().DistributeCascades(DistrInfo, light.m_LightAttribs.ShadowAttribs);
+    }
 
     auto& t = m_Helmet.GetComponent<TransformComponent>();
     if (InputManager::IsPressed("Jump"))

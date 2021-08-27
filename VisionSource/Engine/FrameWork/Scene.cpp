@@ -200,12 +200,15 @@ void Scene::Update(Diligent::InputController& controller, IRenderDevice* pDevice
         {
             auto& model = viewModel.get<MeshComponent>(entity);
 
-            if (!model.m_Model->Animations.empty() && model.m_PlayAnimation)
+            if (model.m_Model != nullptr)
             {
-                float& AnimationTimer = model.m_AnimationTimers[model.m_AnimationIndex];
-                AnimationTimer += dt;
-                AnimationTimer = std::fmod(AnimationTimer, model.m_Model->Animations[model.m_AnimationIndex].End);
-                model.m_Model->UpdateAnimation(model.m_AnimationIndex, AnimationTimer);
+                if (!model.m_Model->Animations.empty() && model.m_PlayAnimation)
+                {
+                    float& AnimationTimer = model.m_AnimationTimers[model.m_AnimationIndex];
+                    AnimationTimer += dt;
+                    AnimationTimer = std::fmod(AnimationTimer, model.m_Model->Animations[model.m_AnimationIndex].End);
+                    model.m_Model->UpdateAnimation(model.m_AnimationIndex, AnimationTimer);
+                }
             }
         }
 

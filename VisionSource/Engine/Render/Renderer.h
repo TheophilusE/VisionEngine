@@ -54,6 +54,7 @@ public:
     void                                     CreateMSAARenderTarget();
     void                                     CreateShadowMap();
     void                                     RenderShadowMap();
+    void                                     CreatePipelineStates();
 
     IEngineFactory*                GetEngineFactory() { return pEngineFactory; }
     IRenderDevice*                 GetRenderDevice() { return pDevice; }
@@ -64,6 +65,7 @@ public:
     GLTF_PBR_Renderer::RenderInfo& GetRenderParams() { return m_RenderParams; }
     RenderSettings&                GetRenderSettings() { return m_RenderSettings; }
     ShadowSettings&                GetShadowSettings() { return m_ShadowSettings; }
+    ShadowMapManager&              GetShadowMapManager() { return m_ShadowMapMgr; }
 
     enum class BackgroundMode : int
     {

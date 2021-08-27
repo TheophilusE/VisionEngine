@@ -261,6 +261,62 @@ void Renderer::CreateMSAARenderTarget()
     m_pMSDepthDSV = pDepth->GetDefaultView(TEXTURE_VIEW_DEPTH_STENCIL);
 }
 
+void Renderer::CreatePipelineStates()
+{
+    auto& scenes = Scene::FindAllScenes();
+
+    for (int i = 0; i < scenes.size(); ++i)
+    {
+        auto& pRegistry = scenes[i]->GetSceneRegistry();
+        auto  viewLight = pRegistry.view<DirectionalLightComponent>();
+
+        for (auto entity : viewLight)
+        {
+            auto& light = viewLight.get<DirectionalLightComponent>(entity);
+            {
+                ShaderCreateInfo                               ShaderCI;
+                RefCntAutoPtr<IShaderSourceInputStreamFactory> pShaderSourceFactory;
+                pEngineFactory->CreateDefaultShaderSourceStreamFactory("shaders", &pShaderSourceFactory);
+                ShaderCI.pShaderSourceStreamFactory = pShaderSourceFactory;
+                ShaderCI.SourceLanguage             = SHADER_SOURCE_LANGUAGE_HLSL;
+                ShaderCI.UseCombinedTextureSamplers = true;
+
+                ShaderMacroHelper Macros;
+                // clang-format off
+                Macros.AddShaderMacro( "SHADOW_MODE",            m_ShadowSettings.iShadowMode);
+                Macros.AddShaderMacro( "SHADOW_FILTER_SIZE",     light.m_LightAttribs.ShadowAttribs.iFixedFilterSize);
+                Macros.AddShaderMacro( "FILTER_ACROSS_CASCADES", m_ShadowSettings.FilterAcrossCascades);
+                Macros.AddShaderMacro( "BEST_CASCADE_SEARCH",    m_ShadowSettings.SearchBestCascade );
+                // clang-format on
+                ShaderCI.Macros = Macros;
+
+                ShaderCI.Desc.ShaderType = SHADER_TYPE_VERTEX;
+                ShaderCI.Desc.Name       = "Mesh VS";
+                ShaderCI.EntryPoint      = "MeshVS";
+                ShaderCI.FilePath        = "MeshVS.vsh";
+                RefCntAutoPtr<IShader> pVS;
+                pDevice->CreateShader(ShaderCI, &pVS);
+
+                ShaderCI.Desc.Name       = "Mesh PS";
+                ShaderCI.EntryPoint      = "MeshPS";
+                ShaderCI.FilePath        = "MeshPS.psh";
+                ShaderCI.Desc.ShaderType = SHADER_TYPE_PIXEL;
+                RefCntAutoPtr<IShader> pPS;
+                pDevice->CreateShader(ShaderCI, &pPS);
+
+                Macros.AddShaderMacro("SHADOW_PASS", true);
+                ShaderCI.Desc.ShaderType = SHADER_TYPE_VERTEX;
+                ShaderCI.Desc.Name       = "Mesh VS";
+                ShaderCI.EntryPoint      = "MeshVS";
+                ShaderCI.FilePath        = "MeshVS.vsh";
+                ShaderCI.Macros          = Macros;
+                RefCntAutoPtr<IShader> pShadowVS;
+                pDevice->CreateShader(ShaderCI, &pShadowVS);
+            }
+        }
+    }
+}
+
 void Renderer::CreateShadowMap()
 {
     auto& scenes = Scene::FindAllScenes();
@@ -337,12 +393,10 @@ void Renderer::RenderShadowMap()
             auto iNumShadowCascades = light.m_LightAttribs.ShadowAttribs.iNumCascades;
             for (int iCascade = 0; iCascade < iNumShadowCascades; ++iCascade)
             {
-                const auto CascadeProjMatr = m_ShadowMapMgr.GetCascadeTranform(iCascade).Proj;
-
-                auto WorldToLightViewSpaceMatr = light.m_LightAttribs.ShadowAttribs.mWorldToLightViewT.Transpose();
-                auto WorldToLightProjSpaceMatr = WorldToLightViewSpaceMatr * CascadeProjMatr;
-
-                CameraAttribs ShadowCameraAttribs = {};
+                const auto    CascadeProjMatr           = m_ShadowMapMgr.GetCascadeTranform(iCascade).Proj; // Problem
+                auto          WorldToLightViewSpaceMatr = light.m_LightAttribs.ShadowAttribs.mWorldToLightViewT.Transpose();
+                auto          WorldToLightProjSpaceMatr = WorldToLightViewSpaceMatr * CascadeProjMatr;
+                CameraAttribs ShadowCameraAttribs       = {};
 
                 ShadowCameraAttribs.mViewT     = light.m_LightAttribs.ShadowAttribs.mWorldToLightViewT;
                 ShadowCameraAttribs.mProjT     = CascadeProjMatr.Transpose();
@@ -464,15 +518,19 @@ void Renderer::Render()
             model.m_RenderParams.OcclusionStrength = m_RenderParams.OcclusionStrength;
             model.m_RenderParams.WhitePoint        = m_RenderParams.WhitePoint;
 
-            if (model.m_bUseResourceCache)
+            // Do check to make sure that the model pointer is valid
+            if (model.m_Model != nullptr)
             {
-                m_GLTFRenderer->Begin(pDevice, pContext, model.m_CacheUseInfo, model.m_CacheBindings, m_CameraAttribsCB, m_LightAttribsCB);
-                m_GLTFRenderer->Render(pContext, *model.m_Model, model.m_RenderParams, nullptr, &model.m_CacheBindings);
-            }
-            else
-            {
-                m_GLTFRenderer->Begin(pContext);
-                m_GLTFRenderer->Render(pContext, *model.m_Model, model.m_RenderParams, &model.m_ModelResourceBindings);
+                if (model.m_bUseResourceCache)
+                {
+                    m_GLTFRenderer->Begin(pDevice, pContext, model.m_CacheUseInfo, model.m_CacheBindings, m_CameraAttribsCB, m_LightAttribsCB);
+                    m_GLTFRenderer->Render(pContext, *model.m_Model, model.m_RenderParams, nullptr, &model.m_CacheBindings);
+                }
+                else
+                {
+                    m_GLTFRenderer->Begin(pContext);
+                    m_GLTFRenderer->Render(pContext, *model.m_Model, model.m_RenderParams, &model.m_ModelResourceBindings);
+                }
             }
         }
     }

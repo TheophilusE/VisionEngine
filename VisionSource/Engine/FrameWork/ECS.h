@@ -63,4 +63,4 @@ private:
     Scene*       m_Scene = nullptr;
 };
 
-}
+} // namespace Vision
