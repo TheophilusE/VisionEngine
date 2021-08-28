@@ -20,6 +20,13 @@ struct RenderSettings
     bool   m_UseMSAA               = false;
     Uint8  m_SampleCount           = 4;
     Uint32 m_SupportedSampleCounts = 0;
+
+    // Environment Map Attributes
+    int   iToneMappingMode     = 3;
+    int   bAutoExposure        = 0;
+    float fLuminanceSaturation = 1.f;
+    float fWhitePoint          = .1f;
+    int   bLightAdaptation     = 1;
 };
 
 struct ShadowSettings

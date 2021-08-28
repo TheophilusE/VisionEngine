@@ -545,11 +545,11 @@ void Renderer::Render()
         {
             MapHelper<EnvMapRenderAttribs> EnvMapAttribs(pContext, m_EnvMapRenderAttribsCB, MAP_WRITE, MAP_FLAG_DISCARD);
             EnvMapAttribs->TMAttribs.iToneMappingMode     = TONE_MAPPING_MODE_UNCHARTED2;
-            EnvMapAttribs->TMAttribs.bAutoExposure        = 0;
+            EnvMapAttribs->TMAttribs.bAutoExposure        = m_RenderSettings.bAutoExposure;
             EnvMapAttribs->TMAttribs.fMiddleGray          = m_RenderParams.MiddleGray;
-            EnvMapAttribs->TMAttribs.bLightAdaptation     = 0;
+            EnvMapAttribs->TMAttribs.bLightAdaptation     = m_RenderSettings.bLightAdaptation;
             EnvMapAttribs->TMAttribs.fWhitePoint          = m_RenderParams.WhitePoint;
-            EnvMapAttribs->TMAttribs.fLuminanceSaturation = 1.0;
+            EnvMapAttribs->TMAttribs.fLuminanceSaturation = m_RenderSettings.fLuminanceSaturation;
             EnvMapAttribs->AverageLogLum                  = m_RenderParams.AverageLogLum;
             EnvMapAttribs->MipLevel                       = m_RenderSettings.m_EnvMapMipLevel;
         }

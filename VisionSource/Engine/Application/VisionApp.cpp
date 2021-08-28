@@ -6,13 +6,6 @@
 #include "ImGuiUtils.hpp"
 #include <math.h>
 
-
-/*
-* TODO
-* - Add editor for camera speed 
-* - Add Editor for environment map attribs - tonemapping and auto exposire
-*/
-
 namespace Diligent
 {
 SampleBase* CreateSample()
@@ -194,8 +187,41 @@ void VisionApp::UpdateUI()
                         // clang-format off
                         ImGui::SliderFloat("Average log lum",    &m_Renderer.GetRenderParams().AverageLogLum,     0.01f, 10.0f);
                         ImGui::SliderFloat("Middle gray",        &m_Renderer.GetRenderParams().MiddleGray,        0.01f,  1.0f);
-                        ImGui::SliderFloat("White point",        &m_Renderer.GetRenderParams().WhitePoint,        0.1f,  20.0f);
                         // clang-format on
+
+                        if (m_Renderer.GetRenderSettings().iToneMappingMode == TONE_MAPPING_MODE_REINHARD_MOD ||
+                            m_Renderer.GetRenderSettings().iToneMappingMode == TONE_MAPPING_MODE_UNCHARTED2 ||
+                            m_Renderer.GetRenderSettings().iToneMappingMode == TONE_MAPPING_LOGARITHMIC ||
+                            m_Renderer.GetRenderSettings().iToneMappingMode == TONE_MAPPING_ADAPTIVE_LOG)
+                        {
+                            ImGui::SliderFloat("White Point", &m_Renderer.GetRenderSettings().fWhitePoint, 0.01f, 20.0f);
+                        }
+
+                        ImGui::Checkbox("Auto Exposure", &m_Renderer.GetRenderSettings().bAutoExposure);
+                        if (m_Renderer.GetRenderSettings().bAutoExposure)
+                            ImGui::Checkbox("Light Adaptation", &m_Renderer.GetRenderSettings().bLightAdaptation);
+
+                        {
+                            Array<const char*, 7> ToneMappingMode;
+                            ToneMappingMode[TONE_MAPPING_MODE_EXP]          = "Exp";
+                            ToneMappingMode[TONE_MAPPING_MODE_REINHARD]     = "Reinhard";
+                            ToneMappingMode[TONE_MAPPING_MODE_REINHARD_MOD] = "Reinhard Mod";
+                            ToneMappingMode[TONE_MAPPING_MODE_UNCHARTED2]   = "Uncharted 2";
+                            ToneMappingMode[TONE_MAPPING_FILMIC_ALU]        = "Filmic ALU";
+                            ToneMappingMode[TONE_MAPPING_LOGARITHMIC]       = "Logarithmic";
+                            ToneMappingMode[TONE_MAPPING_ADAPTIVE_LOG]      = "Adaptive log";
+                            ImGui::Combo("Tone Mapping Mode", &m_Renderer.GetRenderSettings().iToneMappingMode, ToneMappingMode.data(), static_cast<int>(ToneMappingMode.size()));
+                        }
+
+                        if (m_Renderer.GetRenderSettings().iToneMappingMode == TONE_MAPPING_MODE_EXP ||
+                            m_Renderer.GetRenderSettings().iToneMappingMode == TONE_MAPPING_MODE_REINHARD ||
+                            m_Renderer.GetRenderSettings().iToneMappingMode == TONE_MAPPING_MODE_REINHARD_MOD ||
+                            m_Renderer.GetRenderSettings().iToneMappingMode == TONE_MAPPING_LOGARITHMIC ||
+                            m_Renderer.GetRenderSettings().iToneMappingMode == TONE_MAPPING_ADAPTIVE_LOG)
+                        {
+                            ImGui::SliderFloat("Luminance Saturation", &m_Renderer.GetRenderSettings().fLuminanceSaturation, 0.01f, 2.f);
+                        }
+
                         ImGui::TreePop();
                     }
 
