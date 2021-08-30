@@ -59,8 +59,12 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
     light.m_LightAttribs.f4Intensity    = float4(1, 0.8f, 0.5f, 1);
     light.m_LightAttribs.f4AmbientLight = float4(0.125f, 0.125f, 0.125f, 1);
 
+    VISION_CORE_INFO("CPS");
     m_Renderer.CreatePipelineStates();
+    VISION_CORE_INFO("CPSEnd");
+    VISION_CORE_INFO("CS");
     m_Renderer.CreateShadowMap();
+    VISION_CORE_INFO("CSEnd");
     //m.LoadModel("models/DamagedHelmet/DamagedHelmet.gltf", m_Renderer);
     //auto& t = m_Helmet.GetComponent<TransformComponent>();
     //t.Rotation = t.Rotation.RotationFromAxisAngle(float3{0.f, 0.f, 1.f}, 120.f) * t.Rotation;
@@ -94,6 +98,8 @@ void VisionApp::UpdateUI()
                 if (!FileName.empty())
                 {
                     m.LoadModel(FileName.c_str(), m_Renderer);
+                    m_Renderer.CreatePipelineStates();
+                    m_Renderer.CreateShadowMap();
                 }
             }
 #endif

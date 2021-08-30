@@ -128,8 +128,13 @@ struct MeshComponent
     RefCntAutoPtr<GLTF::ResourceManager> m_pResourceMgr;
     GLTF::ResourceCacheUseInfo           m_CacheUseInfo;
 
-    Uint32                           m_CameraId = 0;
-    std::vector<const GLTF::Camera*> m_Cameras;
+    Uint32                      m_CameraId = 0;
+    Vector<const GLTF::Camera*> m_Cameras;
+
+    // Shadows
+    Vector<Uint32>                                m_PSOIndex;
+    Vector<RefCntAutoPtr<IPipelineState>>         m_RenderMeshShadowPSO;
+    Vector<RefCntAutoPtr<IShaderResourceBinding>> m_ShadowSRBs;
 };
 
 } // namespace Vision

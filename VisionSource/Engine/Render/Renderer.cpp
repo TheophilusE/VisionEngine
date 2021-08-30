@@ -312,6 +312,89 @@ void Renderer::CreatePipelineStates()
                 ShaderCI.Macros          = Macros;
                 RefCntAutoPtr<IShader> pShadowVS;
                 pDevice->CreateShader(ShaderCI, &pShadowVS);
+
+                {
+                    auto viewMesh = pRegistry.view<MeshComponent>();
+
+                    for (auto entityMesh : viewMesh)
+                    {
+                        auto& mesh = viewMesh.get<MeshComponent>(entityMesh);
+                        if (mesh.m_Model != nullptr)
+                        {
+                            mesh.m_PSOIndex.resize(mesh.m_Model->GetBaseVertex());
+                            mesh.m_RenderMeshShadowPSO.clear();
+
+                            for (Uint32 vb = 0; vb < mesh.m_Model->GetBaseVertex(); ++vb)
+                            {
+                                GraphicsPipelineStateCreateInfo PSOCreateInfo;
+                                PipelineStateDesc&              PSODesc          = PSOCreateInfo.PSODesc;
+                                PipelineResourceLayoutDesc&     ResourceLayout   = PSODesc.ResourceLayout;
+                                GraphicsPipelineDesc&           GraphicsPipeline = PSOCreateInfo.GraphicsPipeline;
+
+                                // clang-format off
+                                ImmutableSamplerDesc ImtblSampler[] =
+                                {
+                                    {SHADER_TYPE_PIXEL, "g_tex2DDiffuse", Sam_Aniso4xWrap}
+                                };
+                                // clang-format on
+                                ResourceLayout.ImmutableSamplers    = ImtblSampler;
+                                ResourceLayout.NumImmutableSamplers = _countof(ImtblSampler);
+
+                                // clang-format off
+                                ShaderResourceVariableDesc Vars[] = 
+                                {
+                                    {SHADER_TYPE_PIXEL, "g_tex2DDiffuse",   SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
+                                    {SHADER_TYPE_PIXEL, m_ShadowSettings.iShadowMode == SHADOW_MODE_PCF ? "g_tex2DShadowMap" : "g_tex2DFilterableShadowMap",   SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE}
+                                };
+                                // clang-format on
+                                ResourceLayout.Variables    = Vars;
+                                ResourceLayout.NumVariables = _countof(Vars);
+
+                                PSODesc.Name      = "Mesh PSO";
+                                PSOCreateInfo.pVS = pVS;
+                                PSOCreateInfo.pPS = pPS;
+
+                                GraphicsPipeline.RTVFormats[0]              = pSwapChain->GetDesc().ColorBufferFormat;
+                                GraphicsPipeline.NumRenderTargets           = 1;
+                                GraphicsPipeline.DSVFormat                  = pSwapChain->GetDesc().DepthBufferFormat;
+                                GraphicsPipeline.PrimitiveTopology          = PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+                                GraphicsPipeline.DepthStencilDesc.DepthFunc = COMPARISON_FUNC_LESS_EQUAL;
+
+                                RefCntAutoPtr<IPipelineState> pRenderMeshPSO;
+                                pDevice->CreateGraphicsPipelineState(PSOCreateInfo, &pRenderMeshPSO);
+                                // clang-format off
+                                pRenderMeshPSO->GetStaticVariableByName(SHADER_TYPE_VERTEX, "cbCameraAttribs")->Set(m_CameraAttribsCB);
+                                pRenderMeshPSO->GetStaticVariableByName(SHADER_TYPE_PIXEL,  "cbLightAttribs")->Set(m_LightAttribsCB);
+                                pRenderMeshPSO->GetStaticVariableByName(SHADER_TYPE_VERTEX, "cbLightAttribs")->Set(m_LightAttribsCB);
+                                // clang-format on
+
+                                PSODesc.Name      = "Mesh Shadow PSO";
+                                PSOCreateInfo.pPS = nullptr;
+                                PSOCreateInfo.pVS = pShadowVS;
+
+                                GraphicsPipeline.NumRenderTargets = 0;
+                                GraphicsPipeline.RTVFormats[0]    = TEX_FORMAT_UNKNOWN;
+                                GraphicsPipeline.DSVFormat        = m_ShadowSettings.ShadowMapFormat;
+
+                                // It is crucial to disable depth clip to allow shadows from objects
+                                // behind the near cascade clip plane!
+                                GraphicsPipeline.RasterizerDesc.DepthClipEnable = False;
+
+                                GraphicsPipeline.RasterizerDesc.CullMode = CULL_MODE_NONE;
+
+                                ResourceLayout.ImmutableSamplers    = nullptr;
+                                ResourceLayout.NumImmutableSamplers = 0;
+                                ResourceLayout.Variables            = nullptr;
+                                ResourceLayout.NumVariables         = 0;
+                                RefCntAutoPtr<IPipelineState> pRenderMeshShadowPSO;
+                                pDevice->CreateGraphicsPipelineState(PSOCreateInfo, &pRenderMeshShadowPSO);
+                                pRenderMeshShadowPSO->GetStaticVariableByName(SHADER_TYPE_VERTEX, "cbCameraAttribs")->Set(m_CameraAttribsCB);
+
+                                mesh.m_RenderMeshShadowPSO.emplace_back(std::move(pRenderMeshShadowPSO));
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -319,7 +402,83 @@ void Renderer::CreatePipelineStates()
 
 void Renderer::InitializeResourceBindings()
 {
+    auto& scenes = Scene::FindAllScenes();
 
+    for (int i = 0; i < scenes.size(); ++i)
+    {
+        auto& pRegistry = scenes[i]->GetSceneRegistry();
+        auto  viewModel = pRegistry.view<MeshComponent>();
+
+        // Render Directional Light
+        for (auto entity : viewModel)
+        {
+            // Ex. auto &vel = view.get<pos, velocity>(entity);
+            auto& mesh = viewModel.get<MeshComponent>(entity);
+            if (mesh.m_Model != nullptr)
+            {
+                mesh.m_ShadowSRBs.clear();
+                mesh.m_ShadowSRBs.resize(mesh.m_Model->Materials.size());
+                /*
+                for (Uint32 mat = 0; mat < mesh.m_Model->Materials.size(); ++mat)
+                {
+                    {
+                        //const auto&                           Mat = mesh.m_Model->Materials[mat];
+                        //RefCntAutoPtr<IShaderResourceBinding> pSRB;
+                        //m_RenderMeshPSO[0]->CreateShaderResourceBinding(&pSRB, true);
+
+                    }
+                    {
+                        RefCntAutoPtr<IShaderResourceBinding> pSRB;
+                        m_EnvMapPSO->CreateShaderResourceBinding(&pSRB, true);
+                        try
+                        {
+                            const auto& tView = mesh.m_Model->GetTexture(static_cast<Uint32>(GLTF_PBR_Renderer::RenderInfo::DebugViewType::DiffuseColor));
+                            if (tView)
+                                pSRB->GetVariableByName(SHADER_TYPE_PIXEL, "g_tex2DDiffuse")->Set(tView);
+                        }
+                        catch (...)
+                        {
+                            VISION_CORE_WARN("Diffuse Texture Returned Null");
+                        }
+
+                        if (m_ShadowSettings.iShadowMode == SHADOW_MODE_PCF)
+                        {
+                            pSRB->GetVariableByName(SHADER_TYPE_PIXEL, "g_tex2DShadowMap")->Set(m_ShadowMapMgr.GetSRV());
+                        }
+                        else
+                        {
+                            pSRB->GetVariableByName(SHADER_TYPE_PIXEL, "g_tex2DFilterableShadowMap")->Set(m_ShadowMapMgr.GetFilterableSRV());
+                        }
+                        //m_SRBs[mat] = std::move(pSRB);
+                        mesh.m_ModelResourceBindings.MaterialSRB[i] = std::move(pSRB);
+                    }
+                    {
+                        RefCntAutoPtr<IShaderResourceBinding> pShadowSRB;
+                        m_EnvMapPSO->CreateShaderResourceBinding(&pShadowSRB, true);
+                        mesh.m_ShadowSRBs[mat] = std::move(pShadowSRB);
+                    }
+                }*/
+
+                for (const auto* pNode : mesh.m_Model->LinearNodes)
+                {
+                    if (!pNode->pMesh)
+                        continue;
+
+                    const auto& Mesh = *pNode->pMesh;
+
+                    for (const auto& primitive : Mesh.Primitives)
+                    {
+                        //const auto& material = mesh.m_Model->Materials[primitive.MaterialId];
+                        {
+                            RefCntAutoPtr<IShaderResourceBinding> pShadowSRB;
+                            m_EnvMapPSO->CreateShaderResourceBinding(&pShadowSRB, true);
+                            mesh.m_ShadowSRBs[primitive.MaterialId] = std::move(pShadowSRB);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 void Renderer::CreateShadowMap()
@@ -390,6 +549,7 @@ void Renderer::RenderShadowMap()
         auto& pRegistry    = scenes[i]->GetSceneRegistry();
         auto  viewCamera   = pRegistry.view<CameraComponent>();
         auto  viewDirLight = pRegistry.view<DirectionalLightComponent>();
+        auto  viewMesh     = pRegistry.view<MeshComponent>();
 
         for (auto entityLight : viewDirLight)
         {
@@ -423,6 +583,38 @@ void Renderer::RenderShadowMap()
 
                 ViewFrustumExt Frutstum;
                 ExtractViewFrustumPlanesFromMatrix(WorldToLightProjSpaceMatr, Frutstum, pDevice->GetDeviceInfo().IsGLDevice());
+
+
+                {
+                    for (auto entity : viewMesh)
+                    {
+                        auto& mesh = viewMesh.get<MeshComponent>(entity);
+
+                        // Note that Vulkan requires shadow map to be transitioned to DEPTH_READ state, not SHADER_RESOURCE
+                        if (mesh.m_ShadowSRBs.size() > 0)
+                            pContext->TransitionShaderResources(m_EnvMapPSO, mesh.m_ShadowSRBs[0]);
+
+                        for (const auto* pNode : mesh.m_Model->LinearNodes)
+                        {
+                            if (!pNode->pMesh)
+                                continue;
+
+                            const auto& Mesh = *pNode->pMesh;
+
+                            pContext->SetPipelineState(mesh.m_RenderMeshShadowPSO[0]);
+
+                            // Draw all subsets
+                            // Render mesh primitives
+                            for (const auto& primitive : Mesh.Primitives)
+                            {
+                                //const auto& material = mesh.m_Model->Materials[primitive.MaterialId];
+                                //if (material.Attribs.AlphaMode != GLTF::Material::ShaderAttribs::AlphaMode)
+                                //    continue;
+                                pContext->CommitShaderResources((mesh.m_ShadowSRBs)[primitive.MaterialId], RESOURCE_STATE_TRANSITION_MODE_VERIFY);
+                            }
+                        }
+                    }
+                }
             }
 
             if (m_ShadowSettings.iShadowMode > SHADOW_MODE_PCF)
