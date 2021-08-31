@@ -22,6 +22,9 @@ VisionApp::~VisionApp()
 {
 }
 
+static void DrawVectorControl(const String& Label, float3& fVector, float resetValue = 0.0f, float ColumnWidth = 100.0f);
+static void DrawVectorControl(const String& Label, float4& fVector, float resetValue = 0.0f, float ColumnWidth = 100.0f);
+
 void VisionApp::Initialize(const SampleInitInfo& InitInfo)
 {
     ApplicationBase::Initialize(InitInfo);
@@ -66,10 +69,11 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
     VISION_CORE_INFO("CS");
     m_Renderer.CreateShadowMap();
     VISION_CORE_INFO("CSEnd");
+    */
+    //auto& m = m_Helmet.GetComponent<MeshComponent>();
     //m.LoadModel("models/DamagedHelmet/DamagedHelmet.gltf", m_Renderer);
     //auto& t = m_Helmet.GetComponent<TransformComponent>();
     //t.Rotation = t.Rotation.RotationFromAxisAngle(float3{0.f, 0.f, 1.f}, 120.f) * t.Rotation;
-    */
 }
 
 void VisionApp::UpdateUI()
@@ -88,7 +92,7 @@ void VisionApp::UpdateUI()
         auto& camera = m_Camera.GetComponent<CameraComponent>();
 
         ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
-        if (ImGui::Begin("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        if (ImGui::Begin("Settings", nullptr)) // ImGuiWindowFlags_AlwaysAutoResize
         {
 #ifdef PLATFORM_WIN32
             if (ImGui::Button("Load model"))
@@ -109,6 +113,30 @@ void VisionApp::UpdateUI()
                 ImGui::gizmo3D("Model Rotation", t.Rotation, ImGui::GetTextLineHeight() * 10);
                 ImGui::SameLine();
                 ImGui::gizmo3D("Light direction", light.m_LightDirection, ImGui::GetTextLineHeight() * 10);
+            }
+
+            {
+                if (ImGui::TreeNode("Transform"))
+                {
+                    DrawVectorControl("Translation", t.Translation);
+
+                    float4 Rotation = t.Rotation.q;
+
+                    DrawVectorControl("Rotation", Rotation);
+
+                    DrawVectorControl("Scale", t.Scale, 1.0f);
+
+                    if (ImGui::Button("Update Rotation"))
+                    {
+                        t.Rotation = Quaternion::RotationFromAxisAngle(float3{1.f, 0.f, 0.f}, Rotation.x) *
+                            Quaternion::RotationFromAxisAngle(float3{0.f, 1.f, 0.f}, Rotation.y) *
+                            Quaternion::RotationFromAxisAngle(float3{0.f, 0.f, 1.f}, Rotation.z) *
+                            t.Rotation *
+                            Quaternion::RotationFromAxisAngle(float3{0.75f, 0.0f, 0.75f}, PI_F);
+                    }
+
+                    ImGui::TreePop();
+                }
             }
 
             {
@@ -368,6 +396,120 @@ void VisionApp::Render()
 
 void VisionApp::PostRender()
 {
+}
+
+static void DrawVectorControl(const String& Label, float3& fVector, float resetValue, float ColumnWidth)
+{
+    ImGui::PushID(Label.c_str());
+
+    ImGui::Columns(2);
+    ImGui::SetColumnWidth(0, ColumnWidth);
+    ImGui::Text(Label.c_str());
+    ImGui::NextColumn();
+
+    ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0, 0});
+
+    float  lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+    ImVec2 buttonSize = {lineHeight + 3.0f, lineHeight};
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.8f, 0.1f, 0.15f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.9f, 0.2f, 0.2f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.8f, 0.1f, 0.15f, 1.0f});
+    if (ImGui::Button("X", buttonSize))
+        fVector.x = resetValue;
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+    ImGui::DragFloat("##X", &fVector.x, 0.1f, 0.0f, 0.0f, "%.2f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine();
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.2f, 0.7f, 0.2f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3f, 0.8f, 0.3f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.2f, 0.7f, 0.2f, 1.0f});
+    if (ImGui::Button("Y", buttonSize))
+        fVector.y = resetValue;
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+    ImGui::DragFloat("##Y", &fVector.y, 0.1f, 0.0f, 0.0f, "%.2f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine();
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.1f, 0.25f, 0.8f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.2f, 0.35f, 0.9f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.1f, 0.25f, 0.8f, 1.0f});
+    if (ImGui::Button("Z", buttonSize))
+        fVector.z = resetValue;
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+    ImGui::DragFloat("##Z", &fVector.z, 0.1f, 0.0f, 0.0f, "%.2f");
+    ImGui::PopItemWidth();
+
+    ImGui::PopStyleVar();
+
+    ImGui::Columns(1);
+
+    ImGui::PopID();
+}
+
+static void DrawVectorControl(const String& Label, float4& fVector, float resetValue, float ColumnWidth)
+{
+    ImGui::PushID(Label.c_str());
+
+    ImGui::Columns(2);
+    ImGui::SetColumnWidth(0, ColumnWidth);
+    ImGui::Text(Label.c_str());
+    ImGui::NextColumn();
+
+    ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0, 0});
+
+    float  lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+    ImVec2 buttonSize = {lineHeight + 3.0f, lineHeight};
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.8f, 0.1f, 0.15f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.9f, 0.2f, 0.2f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.8f, 0.1f, 0.15f, 1.0f});
+    if (ImGui::Button("X", buttonSize))
+        fVector.x = resetValue;
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+    ImGui::DragFloat("##X", &fVector.x, 0.1f, 0.0f, 0.0f, "%.2f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine();
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.2f, 0.7f, 0.2f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3f, 0.8f, 0.3f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.2f, 0.7f, 0.2f, 1.0f});
+    if (ImGui::Button("Y", buttonSize))
+        fVector.y = resetValue;
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+    ImGui::DragFloat("##Y", &fVector.y, 0.1f, 0.0f, 0.0f, "%.2f");
+    ImGui::PopItemWidth();
+    ImGui::SameLine();
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.1f, 0.25f, 0.8f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.2f, 0.35f, 0.9f, 1.0f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.1f, 0.25f, 0.8f, 1.0f});
+    if (ImGui::Button("Z", buttonSize))
+        fVector.z = resetValue;
+    ImGui::PopStyleColor(3);
+
+    ImGui::SameLine();
+    ImGui::DragFloat("##Z", &fVector.z, 0.1f, 0.0f, 0.0f, "%.2f");
+    ImGui::PopItemWidth();
+
+    ImGui::PopStyleVar();
+
+    ImGui::Columns(1);
+
+    ImGui::PopID();
 }
 
 void VisionApp::WindowResize(Uint32 Width, Uint32 Height)

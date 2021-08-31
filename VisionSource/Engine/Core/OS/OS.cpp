@@ -19,7 +19,7 @@ Ref<spdlog::logger> OS::s_ClientLogger;
 
 void OS::Initialize()
 {
-	RunApplication();
+	//RunApplication();
 
     std::vector<spdlog::sink_ptr> logSinks;
     logSinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());

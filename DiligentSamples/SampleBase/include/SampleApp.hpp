@@ -132,7 +132,7 @@ protected:
     int          m_SelectedDisplayMode  = 0;
     bool         m_bVSync               = false;
     bool         m_bFullScreenMode      = false;
-    bool         m_bShowAdaptersDialog  = true;
+    bool         m_bShowAdaptersDialog  = false;
     bool         m_bShowUI              = true;
     bool         m_bForceNonSeprblProgs = false;
     double       m_CurrentTime          = 0;
