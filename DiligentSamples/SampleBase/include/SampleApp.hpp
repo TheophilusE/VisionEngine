@@ -130,7 +130,7 @@ protected:
     ADAPTER_TYPE m_AdapterType = ADAPTER_TYPE_UNKNOWN;
     std::string  m_AdapterDetailsString;
     int          m_SelectedDisplayMode  = 0;
-    bool         m_bVSync               = false;
+    bool         m_bVSync               = true;
     bool         m_bFullScreenMode      = false;
     bool         m_bShowAdaptersDialog  = false;
     bool         m_bShowUI              = true;

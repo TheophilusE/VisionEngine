@@ -1,0 +1,17 @@
+[14:30:08] [info] VISION ENGINE: Input enabled
+[14:30:08] [info] VISION ENGINE: Registered 1 more input schemes on top of 0 existing ones
+[14:30:08] [info] VISION ENGINE: Pushed input scheme: DefaultInputScheme
+[14:30:08] [info] VISION ENGINE: Input enabled
+[14:30:12] [info] VISION ENGINE: Added A Transform Component
+[14:30:12] [info] VISION ENGINE: Added A Bounding Box Component
+[14:30:12] [info] VISION ENGINE: Added A Tag Component
+[14:30:12] [info] VISION ENGINE: Added A Transform Component
+[14:30:12] [info] VISION ENGINE: Added A Bounding Box Component
+[14:30:12] [info] VISION ENGINE: Added A Tag Component
+[14:30:12] [info] VISION ENGINE: Added A Transform Component
+[14:30:12] [info] VISION ENGINE: Added A Bounding Box Component
+[14:30:12] [info] VISION ENGINE: Added A Tag Component
+[14:30:12] [info] VISION ENGINE: Added A Directional Light Component
+[14:30:12] [info] VISION ENGINE: Added A Camera Component
+[14:30:12] [info] VISION ENGINE: Added A Mesh Component
+[14:42:34] [info] VISION ENGINE: Deleted scene: MainScene # 2
