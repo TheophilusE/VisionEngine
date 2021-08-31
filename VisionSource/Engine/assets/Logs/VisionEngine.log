@@ -1,20 +1,17 @@
-[11:35:56] [info] VISION ENGINE: Input enabled
-[11:35:56] [info] VISION ENGINE: Registered 1 more input schemes on top of 0 existing ones
-[11:35:56] [info] VISION ENGINE: Pushed input scheme: DefaultInputScheme
-[11:35:56] [info] VISION ENGINE: Input enabled
-[11:35:58] [info] VISION ENGINE: Added A Transform Component
-[11:35:58] [info] VISION ENGINE: Added A Bounding Box Component
-[11:35:58] [info] VISION ENGINE: Added A Tag Component
-[11:35:58] [info] VISION ENGINE: Added A Transform Component
-[11:35:58] [info] VISION ENGINE: Added A Bounding Box Component
-[11:35:58] [info] VISION ENGINE: Added A Tag Component
-[11:35:58] [info] VISION ENGINE: Added A Transform Component
-[11:35:58] [info] VISION ENGINE: Added A Bounding Box Component
-[11:35:58] [info] VISION ENGINE: Added A Tag Component
-[11:35:58] [info] VISION ENGINE: Added A Directional Light Component
-[11:35:58] [info] VISION ENGINE: Added A Camera Component
-[11:35:58] [info] VISION ENGINE: Added A Mesh Component
-[11:35:58] [info] VISION ENGINE: CPS
-[11:35:58] [info] VISION ENGINE: CPSEnd
-[11:35:58] [info] VISION ENGINE: CS
-[11:35:58] [info] VISION ENGINE: CSEnd
+[08:12:36] [info] VISION ENGINE: Input enabled
+[08:12:36] [info] VISION ENGINE: Registered 1 more input schemes on top of 0 existing ones
+[08:12:36] [info] VISION ENGINE: Pushed input scheme: DefaultInputScheme
+[08:12:36] [info] VISION ENGINE: Input enabled
+[08:12:38] [info] VISION ENGINE: Added A Transform Component
+[08:12:38] [info] VISION ENGINE: Added A Bounding Box Component
+[08:12:38] [info] VISION ENGINE: Added A Tag Component
+[08:12:38] [info] VISION ENGINE: Added A Transform Component
+[08:12:38] [info] VISION ENGINE: Added A Bounding Box Component
+[08:12:38] [info] VISION ENGINE: Added A Tag Component
+[08:12:38] [info] VISION ENGINE: Added A Transform Component
+[08:12:38] [info] VISION ENGINE: Added A Bounding Box Component
+[08:12:38] [info] VISION ENGINE: Added A Tag Component
+[08:12:38] [info] VISION ENGINE: Added A Directional Light Component
+[08:12:38] [info] VISION ENGINE: Added A Camera Component
+[08:12:38] [info] VISION ENGINE: Added A Mesh Component
+[08:13:07] [info] VISION ENGINE: Deleted scene: MainScene # 2

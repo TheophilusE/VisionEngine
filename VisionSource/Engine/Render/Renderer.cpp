@@ -558,7 +558,7 @@ void Renderer::RenderShadowMap()
             auto iNumShadowCascades = light.m_LightAttribs.ShadowAttribs.iNumCascades;
             for (int iCascade = 0; iCascade < iNumShadowCascades; ++iCascade)
             {
-                const auto    CascadeProjMatr           = m_ShadowMapMgr.GetCascadeTranform(iCascade).Proj; // Problem
+                const auto    CascadeProjMatr           = m_ShadowMapMgr.GetCascadeTranform(iCascade).Proj;
                 auto          WorldToLightViewSpaceMatr = light.m_LightAttribs.ShadowAttribs.mWorldToLightViewT.Transpose();
                 auto          WorldToLightProjSpaceMatr = WorldToLightViewSpaceMatr * CascadeProjMatr;
                 CameraAttribs ShadowCameraAttribs       = {};
@@ -625,7 +625,7 @@ void Renderer::RenderShadowMap()
 
 void Renderer::Render()
 {
-    RenderShadowMap();
+    //RenderShadowMap();
 
     ITextureView* pRTV = nullptr;
     ITextureView* pDSV = nullptr;

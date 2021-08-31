@@ -59,6 +59,7 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
     light.m_LightAttribs.f4Intensity    = float4(1, 0.8f, 0.5f, 1);
     light.m_LightAttribs.f4AmbientLight = float4(0.125f, 0.125f, 0.125f, 1);
 
+    /*
     VISION_CORE_INFO("CPS");
     m_Renderer.CreatePipelineStates();
     VISION_CORE_INFO("CPSEnd");
@@ -68,6 +69,7 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
     //m.LoadModel("models/DamagedHelmet/DamagedHelmet.gltf", m_Renderer);
     //auto& t = m_Helmet.GetComponent<TransformComponent>();
     //t.Rotation = t.Rotation.RotationFromAxisAngle(float3{0.f, 0.f, 1.f}, 120.f) * t.Rotation;
+    */
 }
 
 void VisionApp::UpdateUI()
@@ -98,8 +100,8 @@ void VisionApp::UpdateUI()
                 if (!FileName.empty())
                 {
                     m.LoadModel(FileName.c_str(), m_Renderer);
-                    m_Renderer.CreatePipelineStates();
-                    m_Renderer.CreateShadowMap();
+                    //m_Renderer.CreatePipelineStates();
+                    //m_Renderer.CreateShadowMap();
                 }
             }
 #endif
@@ -327,10 +329,11 @@ void VisionApp::Update(double CurrTime, double ElapsedTime)
 
     m_Scene->Update(m_InputController, m_Renderer.GetRenderDevice(), m_Renderer.GetSwapChain(), static_cast<float>(ElapsedTime));
 
-    auto& light  = m_DirectionalLight.GetComponent<DirectionalLightComponent>();
-    auto& camera = m_Camera.GetComponent<CameraComponent>();
+    //auto& light  = m_DirectionalLight.GetComponent<DirectionalLightComponent>();
+    //auto& camera = m_Camera.GetComponent<CameraComponent>();
 
     // Update Shadow Map
+    /*
     {
         ShadowMapManager::DistributeCascadeInfo DistrInfo;
         DistrInfo.pCameraView   = &camera.m_Camera.GetViewMatrix();
@@ -345,6 +348,7 @@ void VisionApp::Update(double CurrTime, double ElapsedTime)
 
         m_Renderer.GetShadowMapManager().DistributeCascades(DistrInfo, light.m_LightAttribs.ShadowAttribs);
     }
+    */
 
     auto& t = m_Helmet.GetComponent<TransformComponent>();
     if (InputManager::IsPressed("Jump"))
