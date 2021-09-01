@@ -184,7 +184,7 @@ void VisionApp::UpdateUI()
 
                     ImGui::SliderFloat("Sensor Dimension Width", &sensorDimension.x, 0.00454f, 0.0364f);
                     ImGui::SliderFloat("Sensor Dimension Height", &sensorDimension.y, 0.00342f, 0.024f);
-                    ImGui::SliderFloat("Camera Focal Length", &focalLength, 0.01f, 0.5f);
+                    ImGui::SliderFloat("Camera Focal Length", &focalLength, 0.018f, 0.5f);
                     ImGui::SliderFloat("Camera Linear Distance", &linearDistance, 0.001f, 10.f);
                     ImGui::SliderFloat("Camera Near Clip", &nearClip, 0.01f, 10000.f);
                     ImGui::SliderFloat("Camera Far Clip", &farClip, 1.f, 10000.f);

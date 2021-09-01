@@ -32,6 +32,8 @@ set(SOURCE
 
     Render/Renderer.cpp
 
+    Core/Math/VMath.cpp
+
     ../../DiligentTools/ThirdParty/imgui/imgui_demo.cpp
 )
 
@@ -56,12 +58,14 @@ set(INCLUDE
     FrameWork/Components.h
 
     Render/Renderer.h
+
+    Core/Math/VMath.h
 )
 
 add_subdirectory(ThirdParty/entt-3.8.1)
 add_subdirectory(ThirdParty/Gainput)
 add_subdirectory(ThirdParty/spdlog-1.9.1)
-#add_subdirectory(ThirdParty/eigen-3.4-rc1)
+add_subdirectory(ThirdParty/eigen-3.4.0)
 add_subdirectory(ThirdParty/json)
 
 set(SHADERS
@@ -106,6 +110,7 @@ PRIVATE
     ThirdParty/gainput/lib/include/
     ThirdParty/entt-3.8.1
     ThirdParty/spdlog-1.9.1
+    ThirdParty/eigen-3.4.0/
 )
 
 target_link_libraries(VisionEngine
