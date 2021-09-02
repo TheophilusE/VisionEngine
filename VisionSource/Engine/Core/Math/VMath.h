@@ -49,4 +49,34 @@ namespace Vision
     static Vision::Vector4d ConvertToVector4d(Diligent::double4& vector);
     // Convert Vector4d To Diligent Double4
     static Diligent::double4 ConvertToDouble4(Vision::Vector4d& vector);
+
+    // Convert Diligent Matrix To Matrix
+    static Vision::Matrix2f ConvertToMatrix2f(Diligent::float2x2& vector);
+    // Convert Matrix2f to Diligent float2x2
+    static Diligent::float2x2 ConvertToFloat2x2(Vision::Matrix2f& vector);
+
+    // Convert Diligent Double2 To Matrix2d
+    static Vision::Matrix2d ConvertToMatrix2d(Diligent::double2x2& vector);
+    // Convert Matrix2d To Diligent Double2x2
+    static Diligent::double2x2 ConvertToDouble2x2(Vision::Matrix2d& vector);
+    
+    // Convert Diligent Float3x3 To Matrix3f
+    static Vision::Matrix3f ConvertToMatrix3f(Diligent::float3x3& vector);
+    // Convert Matrix3f To Diligent Float3x3
+    static Diligent::float3x3 ConvertToFloat3x3(Vision::Matrix3f& vector);
+
+    // Convert Diligent Double3x3 To Matrix3d
+    static Vision::Matrix3d ConvertToMatrix3d(Diligent::double3x3& vector);
+    // Convert Matrix3d To Diligent Double3x3
+    static Diligent::double3x3 ConvertToDouble3x3(Vision::Matrix3d& vector);
+
+    // Convert Diligent Float4x4 To Matrix4f
+    static Vision::Matrix4f ConvertToMatrix4f(Diligent::float4x4& vector);
+    // Convert Matrix4f To Diligent Float4x4
+    static Diligent::float4x4 ConvertToFloat4x4(Vision::Matrix4f& vector);
+
+    // Convert Diligent Double4x4 To Matrix4d
+    static Vision::Matrix4d ConvertToMatrix4d(Diligent::double4x4& vector);
+    // Convert Matrix4d To Diligent Double4x4
+    static Diligent::double4x4 ConvertToDouble4x4(Vision::Matrix4d& vector);
 }
