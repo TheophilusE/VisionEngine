@@ -85,104 +85,141 @@ static Vision::Matrix2f ConvertToMatrix2f(Diligent::float2x2& vector)
 
     return result;
 }
-/*
-    static Diligent::float2x2 ConvertToFloat2x2(Vision::Matrix2f& vector)
-    {
-        return Diligent::float2x2{
-            vector(0, 0), vector(0, 1),
-            vector(1, 0), vector(1, 1)
-        };
-    }
-    
-    static Vision::Matrix2d ConvertToMatrix2d(Diligent::double2x2& vector)
-    {
-        return Matrix2d {
-            {vector.m00, vector.m01},
-            {vector.m10, vector.m11}
-        };
-    }
 
-    static Diligent::double2x2 ConvertToDouble2x2(Vision::Matrix2d& vector)
-    {
-        return Diligent::double2x2{
-            vector(0, 0), vector(0, 1),
-            vector(1, 0), vector(1, 1)
-        };
-    }
-    
-    static Vision::Matrix3f ConvertToMatrix3f(Diligent::float3x3& vector)
-    {
-        return Matrix3f {
-            {vector.m00, vector.m01, vector.m02},
-            {vector.m10, vector.m11, vector.m12},
-            {vector.m20, vector.m21, vector.m22}
-        };
-    }
+static Diligent::float2x2 ConvertToFloat2x2(Vision::Matrix2f& vector)
+{
+    return Diligent::float2x2{
+        vector(0, 0), vector(0, 1),
+        vector(1, 0), vector(1, 1)};
+}
 
-    static Diligent::float3x3 ConvertToFloat3x3(Vision::Matrix3f& vector)
-    {
-        return Diligent::float3x3{
-            vector(0, 0), vector(0, 1), vector(0, 2),
-            vector(1, 0), vector(1, 1), vector(1, 2),
-            vector(2, 0), vector(2, 1), vector(2, 2),
-        };
-    }
+static Vision::Matrix2d ConvertToMatrix2d(Diligent::double2x2& vector)
+{
+    Vision::Matrix2d result;
 
-    static Vision::Matrix3d ConvertToMatrix3d(Diligent::double3x3& vector)
-    {
-        return Matrix3d {
-            {vector.m00, vector.m01, vector.m02},
-            {vector.m10, vector.m11, vector.m12},
-            {vector.m20, vector.m21, vector.m22}
-        };
-    }
+    result << vector.m00, vector.m01,
+        vector.m10, vector.m11;
 
-    static Diligent::double3x3 ConvertToDouble3x3(Vision::Matrix3d& vector)
-    {
-        return Diligent::double3x3{
-            vector(0, 0), vector(0, 1), vector(0, 2),
-            vector(1, 0), vector(1, 1), vector(1, 2),
-            vector(2, 0), vector(2, 1), vector(2, 2),
-        };
-    }
+    return result;
+}
 
-    static Vision::Matrix4f ConvertToMatrix4f(Diligent::float4x4& vector)
-    {
-        return Matrix4f {
-            {vector.m00, vector.m01, vector.m02, vector.m03},
-            {vector.m10, vector.m11, vector.m12, vector.m13},
-            {vector.m20, vector.m21, vector.m22, vector.m23},
-            {vector.m30, vector.m31, vector.m32, vector.m33}
-        };
-    }
+static Diligent::double2x2 ConvertToDouble2x2(Vision::Matrix2d& vector)
+{
+    return Diligent::double2x2{
+        vector(0, 0), vector(0, 1),
+        vector(1, 0), vector(1, 1)};
+}
 
-    static Diligent::float4x4 ConvertToFloat4x4(Vision::Matrix4f& vector)
-    {
-        return Diligent::float4x4{
-            vector(0, 0), vector(0, 1), vector(0, 2), vector(0, 3),
-            vector(1, 0), vector(1, 1), vector(1, 2), vector(1, 3),
-            vector(2, 0), vector(2, 1), vector(2, 2), vector(2, 3),
-            vector(3, 0), vector(3, 1), vector(3, 2), vector(3, 3)
-        };
-    }
+static Vision::Matrix3f ConvertToMatrix3f(Diligent::float3x3& vector)
+{
+    Matrix3f result;
 
-    static Vision::Matrix4d ConvertToMatrix4d(Diligent::double4x4& vector)
-    {
-        return Matrix4d {
-            {vector.m00, vector.m01, vector.m02, vector.m03},
-            {vector.m10, vector.m11, vector.m12, vector.m13},
-            {vector.m20, vector.m21, vector.m22, vector.m23},
-            {vector.m30, vector.m31, vector.m32, vector.m33}
-        };
-    }
+    result << vector.m00, vector.m01, vector.m02,
+        vector.m10, vector.m11, vector.m12,
+        vector.m20, vector.m21, vector.m22;
+}
 
-    static Diligent::double4x4 ConvertToDouble4x4(Vision::Matrix4d& vector)
-    {
-        return Diligent::double4x4 {
-            vector(0, 0), vector(0, 1), vector(0, 2), vector(0, 3),
-            vector(1, 0), vector(1, 1), vector(1, 2), vector(1, 3),
-            vector(2, 0), vector(2, 1), vector(2, 2), vector(2, 3),
-            vector(3, 0), vector(3, 1), vector(3, 2), vector(3, 3)
-        };
-    }*/
+static Diligent::float3x3 ConvertToFloat3x3(Vision::Matrix3f& vector)
+{
+    return Diligent::float3x3{
+        vector(0, 0),
+        vector(0, 1),
+        vector(0, 2),
+        vector(1, 0),
+        vector(1, 1),
+        vector(1, 2),
+        vector(2, 0),
+        vector(2, 1),
+        vector(2, 2),
+    };
+}
+
+static Vision::Matrix3d ConvertToMatrix3d(Diligent::double3x3& vector)
+{
+    Matrix3d result;
+
+    result << vector.m00, vector.m01, vector.m02,
+        vector.m10, vector.m11, vector.m12,
+        vector.m20, vector.m21, vector.m22;
+
+    return result;
+}
+
+static Diligent::double3x3 ConvertToDouble3x3(Vision::Matrix3d& vector)
+{
+    return Diligent::double3x3{
+        vector(0, 0),
+        vector(0, 1),
+        vector(0, 2),
+        vector(1, 0),
+        vector(1, 1),
+        vector(1, 2),
+        vector(2, 0),
+        vector(2, 1),
+        vector(2, 2),
+    };
+}
+
+static Vision::Matrix4f ConvertToMatrix4f(Diligent::float4x4& vector)
+{
+    Matrix4f result;
+
+    result << vector.m00, vector.m01, vector.m02, vector.m03,
+        vector.m10, vector.m11, vector.m12, vector.m13,
+        vector.m20, vector.m21, vector.m22, vector.m23,
+        vector.m30, vector.m31, vector.m32, vector.m33;
+
+    return result;
+}
+
+static Diligent::float4x4 ConvertToFloat4x4(Vision::Matrix4f& vector)
+{
+    return Diligent::float4x4{
+        vector(0, 0), vector(0, 1), vector(0, 2), vector(0, 3),
+        vector(1, 0), vector(1, 1), vector(1, 2), vector(1, 3),
+        vector(2, 0), vector(2, 1), vector(2, 2), vector(2, 3),
+        vector(3, 0), vector(3, 1), vector(3, 2), vector(3, 3)};
+}
+
+static Vision::Matrix4d ConvertToMatrix4d(Diligent::double4x4& vector)
+{
+    Matrix4d result;
+
+    result << vector.m00, vector.m01, vector.m02, vector.m03,
+        vector.m10, vector.m11, vector.m12, vector.m13,
+        vector.m20, vector.m21, vector.m22, vector.m23,
+        vector.m30, vector.m31, vector.m32, vector.m33;
+
+    return result;
+}
+
+static Diligent::double4x4 ConvertToDouble4x4(Vision::Matrix4d& vector)
+{
+    return Diligent::double4x4{
+        vector(0, 0), vector(0, 1), vector(0, 2), vector(0, 3),
+        vector(1, 0), vector(1, 1), vector(1, 2), vector(1, 3),
+        vector(2, 0), vector(2, 1), vector(2, 2), vector(2, 3),
+        vector(3, 0), vector(3, 1), vector(3, 2), vector(3, 3)};
+}
+
+static Vision::Quaternionf ConvertToQuaternionf(Diligent::Quaternion& vector)
+{
+    return Quaternionf(vector.q.w, vector.q.x, vector.q.y, vector.q.z);
+}
+
+static Diligent::Quaternion ConvertToQuaternion(Vision::Quaternionf& vector)
+{
+    return Diligent::Quaternion{vector.x(), vector.y(), vector.z(), vector.w()};
+}
+
+static Vision::Quaterniond ConvertToQuaterniond(Diligent::Quaternion& vector)
+{
+    return Quaterniond(vector.q.w, vector.q.x, vector.q.y, vector.q.z);
+}
+
+static Diligent::Quaternion ConvertToQuaternion(Vision::Quaterniond& vector)
+{
+    return Diligent::Quaternion{static_cast<float>(vector.x()), static_cast<float>(vector.y()), static_cast<float>(vector.z()), static_cast<float>(vector.w())};
+}
+
 } // namespace Vision
