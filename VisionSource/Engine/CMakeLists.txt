@@ -111,6 +111,7 @@ PRIVATE
     ThirdParty/entt-3.8.1
     ThirdParty/spdlog-1.9.1
     ThirdParty/eigen-3.4.0/
+    ThirdParty/bullet3-3.17/src/
 )
 
 target_link_libraries(VisionEngine
@@ -124,6 +125,7 @@ PRIVATE
     spdlog
     gainputstatic
     nlohmann_json::nlohmann_json
+    Bullet
 )
 
 foreach(FILE ${EXTERNAL_SHADERS})
