@@ -67,6 +67,7 @@ add_subdirectory(ThirdParty/Gainput)
 add_subdirectory(ThirdParty/spdlog-1.9.1)
 add_subdirectory(ThirdParty/eigen-3.4.0)
 add_subdirectory(ThirdParty/json)
+add_subdirectory(ThirdParty/bullet3-3.17)
 
 set(SHADERS
     assets/shaders/BoundBox.vsh
@@ -125,7 +126,9 @@ PRIVATE
     spdlog
     gainputstatic
     nlohmann_json::nlohmann_json
-    Bullet
+    BulletDynamics
+    BulletCollision
+    LinearMath
 )
 
 foreach(FILE ${EXTERNAL_SHADERS})
