@@ -34,6 +34,8 @@ set(SOURCE
 
     Core/Math/VMath.cpp
 
+    Core/Physics/PhysicsEngine.h
+
     ../../DiligentTools/ThirdParty/imgui/imgui_demo.cpp
 )
 
@@ -60,6 +62,8 @@ set(INCLUDE
     Render/Renderer.h
 
     Core/Math/VMath.h
+
+    Core/Physics/PhysicsEngine.h
 )
 
 add_subdirectory(ThirdParty/entt-3.8.1)
@@ -68,6 +72,7 @@ add_subdirectory(ThirdParty/spdlog-1.9.1)
 add_subdirectory(ThirdParty/eigen-3.4.0)
 add_subdirectory(ThirdParty/json)
 add_subdirectory(ThirdParty/bullet3-3.17)
+add_subdirectory(ThirdParty/pal-code-r685/pal)
 
 set(SHADERS
     assets/shaders/BoundBox.vsh
@@ -113,6 +118,7 @@ PRIVATE
     ThirdParty/spdlog-1.9.1
     ThirdParty/eigen-3.4.0/
     ThirdParty/bullet3-3.17/src/
+    ThirdParty/pal-code-r685/pal/
 )
 
 target_link_libraries(VisionEngine
@@ -129,6 +135,7 @@ PRIVATE
     BulletDynamics
     BulletCollision
     LinearMath
+    libpal
 )
 
 foreach(FILE ${EXTERNAL_SHADERS})
