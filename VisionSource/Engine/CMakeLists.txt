@@ -34,7 +34,7 @@ set(SOURCE
 
     Core/Math/VMath.cpp
 
-    Core/Physics/PhysicsEngine.h
+    Core/Physics/PhysicsEngine.cpp
 
     ../../DiligentTools/ThirdParty/imgui/imgui_demo.cpp
 )
@@ -137,6 +137,7 @@ PRIVATE
     LinearMath
     libpal
 )
+#libpal
 
 foreach(FILE ${EXTERNAL_SHADERS})
     # Copy external shaders

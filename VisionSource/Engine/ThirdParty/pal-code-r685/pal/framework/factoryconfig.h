@@ -18,7 +18,7 @@
 */
 //#define INTERNAL_DEBUG
 #ifdef INTERNAL_DEBUG
-#include <stdio.h>
+#    include <stdio.h>
 #endif
 
 #include "common.h"
@@ -34,64 +34,78 @@ typedef ManagedMemoryObject<StatusObject> myFactoryBase;
 //#define myFactoryParameters myFactoryInfo,myFactoryBase
 typedef RegistrationInfo<myFactoryBase> myFactoryInfo;
 #define myFactoryParameters myFactoryBase
-typedef FactoryObject<myFactoryBase> myFactoryObject;
+typedef FactoryObject<myFactoryBase>    myFactoryObject;
 typedef PluggableFactory<myFactoryBase> myPluggableFactory;
 
-class myFactory : public myPluggableFactory, public MemoryObjectManager<StatusObject> {
+class myFactory : public myPluggableFactory, public MemoryObjectManager<StatusObject>
+{
 public:
-	static void LoadObjects(const char *szPath = NULL, void *factoryPointer = 0, void *factoryInfoPointer=0) throw(palException);
-	virtual void FreeObjects(void);
-	myFactoryObject *Construct(const PAL_STRING& ClassName);
+    static void      LoadObjects(const char* szPath = NULL, void* factoryPointer = 0, void* factoryInfoPointer = 0); //throw(palException);
+    virtual void     FreeObjects(void);
+    myFactoryObject* Construct(const PAL_STRING& ClassName);
 #ifdef INTERNAL_DEBUG
-	void DisplayAllObjects();
+    void DisplayAllObjects();
 #endif
 #if 1 //singleton
 public:
-	static void SetInstance(void *ptr) {
-		m_pInstance = (myFactory *)ptr;
-	}
-	static myFactory *GetInstance() {
-		if (m_pInstance == NULL)
-	    m_pInstance = new myFactory ;
-		return m_pInstance;
-	}
+    static void SetInstance(void* ptr)
+    {
+        m_pInstance = (myFactory*)ptr;
+    }
+    static myFactory* GetInstance()
+    {
+        if (m_pInstance == NULL)
+            m_pInstance = new myFactory;
+        return m_pInstance;
+    }
+
 protected:
-	static myFactory *m_pInstance;
+    static myFactory* m_pInstance;
 #endif
 };
 
 
 #ifdef INTERNAL_DEBUG
-#define FACTORY_CLASS(name,ClassName,GroupName,Version) public: \
-	name(FactoryStaticRegisterVariable /*reg*/) { \
-		 RegisterWithFactory(PluggableFactory<myFactoryParameters>::sInfo());} \
-void RegisterWithFactory(PAL_VECTOR<myFactoryInfo> &lsInfo) { \
-		myFactoryInfo ri; \
-		ri.mUniqueName=#name; \
-		ri.mClassName=#ClassName; \
-		ri.mVersion=Version; \
-		ri.mGroupName=#GroupName; \
-		ri.mConstructor=(myFactoryObject *) this; \
-		printf("%s:%d: Registering %s (%p) with sInfo:%p (size:%ld)\n",__FILE__,__LINE__,#name,this,&lsInfo,lsInfo.size()); \
-		Register(ri,lsInfo); \
-} \
-myFactoryObject* Create() {return new name;} \
-	private:
+#    define FACTORY_CLASS(name, ClassName, GroupName, Version)                                                                        \
+    public:                                                                                                                           \
+        name(FactoryStaticRegisterVariable /*reg*/)                                                                                   \
+        {                                                                                                                             \
+            RegisterWithFactory(PluggableFactory<myFactoryParameters>::sInfo());                                                      \
+        }                                                                                                                             \
+        void RegisterWithFactory(PAL_VECTOR<myFactoryInfo>& lsInfo)                                                                   \
+        {                                                                                                                             \
+            myFactoryInfo ri;                                                                                                         \
+            ri.mUniqueName  = #name;                                                                                                  \
+            ri.mClassName   = #ClassName;                                                                                             \
+            ri.mVersion     = Version;                                                                                                \
+            ri.mGroupName   = #GroupName;                                                                                             \
+            ri.mConstructor = (myFactoryObject*)this;                                                                                 \
+            printf("%s:%d: Registering %s (%p) with sInfo:%p (size:%ld)\n", __FILE__, __LINE__, #name, this, &lsInfo, lsInfo.size()); \
+            Register(ri, lsInfo);                                                                                                     \
+        }                                                                                                                             \
+        myFactoryObject* Create() { return new name; }                                                                                \
+                                                                                                                                      \
+    private:
 #else
-#define FACTORY_CLASS(name,ClassName,GroupName,Version) public: \
-name(FactoryStaticRegisterVariable /*reg*/) { \
-		 RegisterWithFactory(PluggableFactory<myFactoryParameters>::sInfo());} \
-void RegisterWithFactory(PAL_VECTOR<myFactoryInfo> &lsInfo) { \
-		myFactoryInfo ri; \
-		ri.mUniqueName=#name; \
-		ri.mClassName=#ClassName; \
-		ri.mVersion=Version; \
-		ri.mGroupName=#GroupName; \
-		ri.mConstructor=(myFactoryObject *) this; \
-		Register(ri,lsInfo); \
-} \
-virtual myFactoryObject* Create() {return new name;} \
-	private:
+#    define FACTORY_CLASS(name, ClassName, GroupName, Version)                   \
+    public:                                                                      \
+        name(FactoryStaticRegisterVariable /*reg*/)                              \
+        {                                                                        \
+            RegisterWithFactory(PluggableFactory<myFactoryParameters>::sInfo()); \
+        }                                                                        \
+        void RegisterWithFactory(PAL_VECTOR<myFactoryInfo>& lsInfo)              \
+        {                                                                        \
+            myFactoryInfo ri;                                                    \
+            ri.mUniqueName  = #name;                                             \
+            ri.mClassName   = #ClassName;                                        \
+            ri.mVersion     = Version;                                           \
+            ri.mGroupName   = #GroupName;                                        \
+            ri.mConstructor = (myFactoryObject*)this;                            \
+            Register(ri, lsInfo);                                                \
+        }                                                                        \
+        virtual myFactoryObject* Create() { return new name; }                   \
+                                                                                 \
+    private:
 #endif //INTERNAL_DEBUG
 
 
@@ -100,71 +114,77 @@ virtual myFactoryObject* Create() {return new name;} \
 
 
 //a single dll component
-#if defined (DLL_IMPLEMENTATION)
+#if defined(DLL_IMPLEMENTATION)
 
-#if defined (OS_WINDOWS) || defined(OS_LINUX) || defined (OS_OSX) || defined(__CYGWIN__)
-#define FACTORY_CLASS_IMPLEMENTATION(name) extern "C" DLL_FUNC void *CreateComponent() {return new name;}
-#else
-#error Unsuported DLL implementation for this environment
-#endif
+#    if defined(OS_WINDOWS) || defined(OS_LINUX) || defined(OS_OSX) || defined(__CYGWIN__)
+#        define FACTORY_CLASS_IMPLEMENTATION(name) \
+            extern "C" DLL_FUNC void* CreateComponent() { return new name; }
+#    else
+#        error Unsuported DLL implementation for this environment
+#    endif
 
 #endif
 
 
 
 //a group of components
-#if defined (DLL_GROUP_IMPLEMENTATION)
+#if defined(DLL_GROUP_IMPLEMENTATION)
 
-#if defined (OS_WINDOWS) || defined(OS_LINUX) || defined (OS_OSX) || defined(__CYGWIN__)
+#    if defined(OS_WINDOWS) || defined(OS_LINUX) || defined(OS_OSX) || defined(__CYGWIN__)
 
-#define FACTORY_CLASS_IMPLEMENTATION_BEGIN_GROUP extern "C" DLL_FUNC void Group_SetFactory(void *value, void *psvv) { \
-	myFactory::SetInstance(value); \
-	PAL_VECTOR<myFactoryInfo >* psv = (std::vector<myFactoryInfo >*) psvv;	  \
-   if (psv != &myFactory::GetInstance()->sInfo()) {\
-      \
-      PAL_VECTOR<myFactoryInfo >::iterator it; for(it = psv->begin();  it!=psv->end(); it++) { \
-      	myFactory::GetInstance()->sInfo().push_back(	  *it); \
-	   }  \
-	}\
-} \
-extern "C" DLL_FUNC void *Group_CreateComponent(int value) { \
-	static size_t *sizep = 0; \
-	static PAL_VECTOR<myFactoryObject *> s_constructors; \
-	if (value<0) { \
-		if (s_constructors.size()<1) \
-			goto create_constructors;  \
-		goto return_size; \
-	} \
-	if (value>(int)s_constructors.size()-1) \
-		return 0; \
-	return s_constructors[value]->Create(); \
-create_constructors:
+#        define FACTORY_CLASS_IMPLEMENTATION_BEGIN_GROUP                            \
+            extern "C" DLL_FUNC void Group_SetFactory(void* value, void* psvv)      \
+            {                                                                       \
+                myFactory::SetInstance(value);                                      \
+                PAL_VECTOR<myFactoryInfo>* psv = (std::vector<myFactoryInfo>*)psvv; \
+                if (psv != &myFactory::GetInstance()->sInfo())                      \
+                {                                                                   \
+                                                                                    \
+                    PAL_VECTOR<myFactoryInfo>::iterator it;                         \
+                    for (it = psv->begin(); it != psv->end(); it++)                 \
+                    {                                                               \
+                        myFactory::GetInstance()->sInfo().push_back(*it);           \
+                    }                                                               \
+                }                                                                   \
+            }                                                                       \
+            extern "C" DLL_FUNC void* Group_CreateComponent(int value)              \
+            {                                                                       \
+                static size_t*                      sizep = 0;                      \
+                static PAL_VECTOR<myFactoryObject*> s_constructors;                 \
+                if (value < 0)                                                      \
+                {                                                                   \
+                    if (s_constructors.size() < 1)                                  \
+                        goto create_constructors;                                   \
+                    goto return_size;                                               \
+                }                                                                   \
+                if (value > (int)s_constructors.size() - 1)                         \
+                    return 0;                                                       \
+                return s_constructors[value]->Create();                             \
+            create_constructors:
 
 
-#define FACTORY_CLASS_IMPLEMENTATION(name) s_constructors.push_back(new name);
+#        define FACTORY_CLASS_IMPLEMENTATION(name) s_constructors.push_back(new name);
 
-#define FACTORY_CLASS_IMPLEMENTATION_END_GROUP return_size: \
-	if (sizep == 0) \
-		sizep = new size_t; \
-	*sizep = s_constructors.size(); \
-		return sizep; \
-}
+#        define FACTORY_CLASS_IMPLEMENTATION_END_GROUP \
+        return_size:                                   \
+            if (sizep == 0)                            \
+                sizep = new size_t;                    \
+            *sizep = s_constructors.size();            \
+            return sizep;                              \
+            }
 
-#else
-#error Unsuported DLL implementation for this environment
-#endif
+#    else
+#        error Unsuported DLL implementation for this environment
+#    endif
 
 #endif //if defined (DLL_GROUP_IMPLEMENTATION)
 
 //a static implementation
-#if !defined (DLL_IMPLEMENTATION) && !defined (DLL_GROUP_IMPLEMENTATION)
-#define FACTORY_CLASS_IMPLEMENTATION_BEGIN_GROUP
-#define FACTORY_CLASS_IMPLEMENTATION(name) static name g_pluggablefactory_static_ ## name (FACTORY_REGISTER);
-#define FACTORY_CLASS_IMPLEMENTATION_END_GROUP
+#if !defined(DLL_IMPLEMENTATION) && !defined(DLL_GROUP_IMPLEMENTATION)
+#    define FACTORY_CLASS_IMPLEMENTATION_BEGIN_GROUP
+#    define FACTORY_CLASS_IMPLEMENTATION(name) static name g_pluggablefactory_static_##name(FACTORY_REGISTER);
+#    define FACTORY_CLASS_IMPLEMENTATION_END_GROUP
 #endif //DLL_IMPLEMENTATION
 
 
 #endif
-
-
-

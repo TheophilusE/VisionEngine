@@ -1,17 +1,20 @@
-[20:39:56] [info] VISION ENGINE: Input enabled
-[20:39:56] [info] VISION ENGINE: Registered 1 more input schemes on top of 0 existing ones
-[20:39:56] [info] VISION ENGINE: Pushed input scheme: DefaultInputScheme
-[20:39:56] [info] VISION ENGINE: Input enabled
-[20:40:00] [info] VISION ENGINE: Added A Transform Component
-[20:40:00] [info] VISION ENGINE: Added A Bounding Box Component
-[20:40:00] [info] VISION ENGINE: Added A Tag Component
-[20:40:00] [info] VISION ENGINE: Added A Transform Component
-[20:40:00] [info] VISION ENGINE: Added A Bounding Box Component
-[20:40:00] [info] VISION ENGINE: Added A Tag Component
-[20:40:00] [info] VISION ENGINE: Added A Transform Component
-[20:40:00] [info] VISION ENGINE: Added A Bounding Box Component
-[20:40:00] [info] VISION ENGINE: Added A Tag Component
-[20:40:00] [info] VISION ENGINE: Added A Directional Light Component
-[20:40:00] [info] VISION ENGINE: Added A Camera Component
-[20:40:00] [info] VISION ENGINE: Added A Mesh Component
-[20:40:04] [info] VISION ENGINE: Deleted scene: MainScene # 2
+[15:35:43] [info] VISION ENGINE: Input enabled
+[15:35:43] [info] VISION ENGINE: Registered 1 more input schemes on top of 0 existing ones
+[15:35:43] [info] VISION ENGINE: Pushed input scheme: DefaultInputScheme
+[15:35:43] [info] VISION ENGINE: Input enabled
+[15:35:45] [info] VISION ENGINE: Added A Transform Component
+[15:35:45] [info] VISION ENGINE: Added A Bounding Box Component
+[15:35:45] [info] VISION ENGINE: Added A Tag Component
+[15:35:45] [info] VISION ENGINE: Added A Transform Component
+[15:35:45] [info] VISION ENGINE: Added A Bounding Box Component
+[15:35:45] [info] VISION ENGINE: Added A Tag Component
+[15:35:45] [info] VISION ENGINE: Added A Transform Component
+[15:35:45] [info] VISION ENGINE: Added A Bounding Box Component
+[15:35:45] [info] VISION ENGINE: Added A Tag Component
+[15:35:45] [info] VISION ENGINE: Added A Directional Light Component
+[15:35:45] [info] VISION ENGINE: Added A Camera Component
+[15:35:45] [info] VISION ENGINE: Added A Mesh Component
+[15:35:46] [warning] VISION ENGINE: No Physics Engine Found
+[15:35:46] [error] VISION ENGINE: Failed to create the physics engine. Check to see if you spelt the engine name correctly, or that the engine DLL is in the right location
+[15:35:46] [info] VISION ENGINE: 1
+[15:35:49] [info] VISION ENGINE: Deleted scene: MainScene # 2

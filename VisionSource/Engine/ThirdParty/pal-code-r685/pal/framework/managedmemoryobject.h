@@ -28,76 +28,96 @@
 template <typename MemoryBase> class MemoryObjectManager;
 
 template <typename MemoryBase>
-class ManagedMemoryObject : public MemoryBase, public palStringable {
-	friend class MemoryObjectManager<MemoryBase>;
+class ManagedMemoryObject : public MemoryBase, public palStringable
+{
+    friend class MemoryObjectManager<MemoryBase>;
+
 protected:
-//private:
-	ManagedMemoryObject();
-	ManagedMemoryObject(const ManagedMemoryObject<MemoryBase>& mmo)
-		: MemoryBase(mmo) {
-		pMOM = mmo.pMOM;
-	}
-	ManagedMemoryObject& operator=(const ManagedMemoryObject<StatusObject>& mmo) { pMOM = mmo.pMOM; return *this; }
-	virtual ~ManagedMemoryObject();
+    //private:
+    ManagedMemoryObject();
+    ManagedMemoryObject(const ManagedMemoryObject<MemoryBase>& mmo) :
+        MemoryBase(mmo)
+    {
+        pMOM = mmo.pMOM;
+    }
+    ManagedMemoryObject& operator=(const ManagedMemoryObject<StatusObject>& mmo)
+    {
+        pMOM = mmo.pMOM;
+        return *this;
+    }
+    virtual ~ManagedMemoryObject();
+
 public:
-	MemoryObjectManager<MemoryBase> *pMOM; //wheres my mommy?
-	virtual std::string toString() const;
+    MemoryObjectManager<MemoryBase>* pMOM; //wheres my mommy?
+    virtual std::string              toString() const;
 };
 
 template <typename MemoryBase>
-class MemoryObjectManager {
+class MemoryObjectManager
+{
 public:
-	MemoryObjectManager() : pMMO() {}
-	virtual ~MemoryObjectManager() {}
-	void Add(ManagedMemoryObject<MemoryBase> *item);
-	void Remove(ManagedMemoryObject<MemoryBase> *item);
-	virtual void FreeAll();
+    MemoryObjectManager() :
+        pMMO() {}
+    virtual ~MemoryObjectManager() {}
+    void         Add(ManagedMemoryObject<MemoryBase>* item);
+    void         Remove(ManagedMemoryObject<MemoryBase>* item);
+    virtual void FreeAll();
+
 protected:
-//private:
-	typedef std::unordered_set<ManagedMemoryObject<MemoryBase>*> MMOType;
-	MMOType pMMO;
+    //private:
+    typedef std::unordered_set<ManagedMemoryObject<MemoryBase>*> MMOType;
+    MMOType                                                      pMMO;
 };
 
 //code:
 //mmo
-template <typename MemoryBase> ManagedMemoryObject<MemoryBase>::ManagedMemoryObject()
-: pMOM(0) {
+template <typename MemoryBase> ManagedMemoryObject<MemoryBase>::ManagedMemoryObject() :
+    pMOM(0)
+{
 }
 
-template <typename MemoryBase> ManagedMemoryObject<MemoryBase>::~ManagedMemoryObject() {
-	if (pMOM != NULL) { //If we have a MOM
-		pMOM->Remove(this);
-	}
+template <typename MemoryBase> ManagedMemoryObject<MemoryBase>::~ManagedMemoryObject()
+{
+    if (pMOM != NULL)
+    { //If we have a MOM
+        pMOM->Remove(this);
+    }
 }
 
-template <typename MemoryBase> std::string ManagedMemoryObject<MemoryBase>::toString() const {
-	char buf[16];
-	sprintf(buf, "0x%p", this);
-	const std::type_info& info = typeid(*this);
-	std::string result(info.name());
-	result += "@";
-	result += buf;
+template <typename MemoryBase> std::string ManagedMemoryObject<MemoryBase>::toString() const
+{
+    char buf[16];
+    //sprintf(buf, "0x%p", this);
+    sprintf_s(buf, "0x%p", this);
+    const std::type_info& info = typeid(*this);
+    std::string           result(info.name());
+    result += "@";
+    result += buf;
     return result;
 }
 
 //mom
 template <typename MemoryBase>
-void MemoryObjectManager<MemoryBase>::Add(ManagedMemoryObject<MemoryBase> *item) {
-	pMMO.insert(item);
-	item->pMOM=this;
+void MemoryObjectManager<MemoryBase>::Add(ManagedMemoryObject<MemoryBase>* item)
+{
+    pMMO.insert(item);
+    item->pMOM = this;
 }
 
 template <typename MemoryBase>
-void MemoryObjectManager<MemoryBase>::Remove(ManagedMemoryObject<MemoryBase> *item) {
-	pMMO.erase(item);
+void MemoryObjectManager<MemoryBase>::Remove(ManagedMemoryObject<MemoryBase>* item)
+{
+    pMMO.erase(item);
 }
 
 template <typename MemoryBase>
-void MemoryObjectManager<MemoryBase>::FreeAll() {
-	while (!pMMO.empty() ) {
-		delete *pMMO.begin();
-		//no need to erase() because the MMO takes care of it.
-	}
+void MemoryObjectManager<MemoryBase>::FreeAll()
+{
+    while (!pMMO.empty())
+    {
+        delete *pMMO.begin();
+        //no need to erase() because the MMO takes care of it.
+    }
 }
 
 #endif

@@ -74,6 +74,8 @@ void VisionApp::Initialize(const SampleInitInfo& InitInfo)
     //m.LoadModel("models/DamagedHelmet/DamagedHelmet.gltf", m_Renderer);
     //auto& t = m_Helmet.GetComponent<TransformComponent>();
     //t.Rotation = t.Rotation.RotationFromAxisAngle(float3{0.f, 0.f, 1.f}, 120.f) * t.Rotation;
+
+    //VISION_CORE_INFO(PhysicsEngineTestBullet2());
 }
 
 void VisionApp::UpdateUI()
