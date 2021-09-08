@@ -35,6 +35,8 @@ set(SOURCE
     Core/Math/VMath.cpp
 
     Core/Physics/PhysicsEngine.cpp
+    Core/Physics/Bullet/PhysicsEngineBullet.cpp
+    Core/Physics/PhysX/PhysicsEnginePhysX.cpp
 
     ../../DiligentTools/ThirdParty/imgui/imgui_demo.cpp
 )
@@ -64,6 +66,8 @@ set(INCLUDE
     Core/Math/VMath.h
 
     Core/Physics/PhysicsEngine.h
+    Core/Physics/Bullet/PhysicsEngineBullet.h
+    Core/Physics/PhysX/PhysicsEnginePhysX.h
 )
 
 add_subdirectory(ThirdParty/entt-3.8.1)

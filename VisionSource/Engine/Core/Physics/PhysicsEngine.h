@@ -8,6 +8,9 @@
 #include "../OS/OS.h"
 #include "../Math/VMath.h"
 
+#define PHYSICS_ENGINE_BULLET 1
+#define PHYSICS_ENGINE_PHYSX 1
+
 namespace Vision
 {
 struct PhysicsInitInfo
@@ -17,6 +20,19 @@ struct PhysicsInitInfo
     int  Accuracy          = 10;
     int  SubSteps          = 1;
     Vector3f Gravity       = Vector3f(0.0f, -9.81f, 0.0f);
+};
+
+enum PhysicsMaterial
+{
+	Default = 0,
+	End
+};
+
+struct PhysicsMaterialData
+{
+	float Restitution = 1.0f;
+	float Friction = 1.0f;
+	float GravityScale = 1.0f;
 };
 
 class PhysicsEngine

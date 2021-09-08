@@ -16,7 +16,6 @@ PhysicsEngine::PhysicsEngine()
 
 PhysicsEngine::~PhysicsEngine()
 {
-
 }
 
 void PhysicsEngine::Initialize(PhysicsInitInfo& InitInfo)
@@ -26,9 +25,11 @@ void PhysicsEngine::Initialize(PhysicsInitInfo& InitInfo)
     Accuracy          = InitInfo.Accuracy;
     Gravity           = InitInfo.Gravity;
 }
+
 void PhysicsEngine::Update(float TimeStep)
 {
 }
+
 void PhysicsEngine::SetAccuracy(int value)
 {
     Accuracy = value;
@@ -43,7 +44,7 @@ int PhysicsEngine::GetAccuracy()
 void PhysicsEngine::SetEnabled(bool value)
 {
     Enabled = value;
-    VISION_INFO("Phyics Engine Enabled: " + Enabled);
+    VISION_CORE_INFO("Phyics Engine Enabled: " + Enabled);
 }
 
 bool PhysicsEngine::IsEnabled()
@@ -54,7 +55,7 @@ bool PhysicsEngine::IsEnabled()
 void PhysicsEngine::SetSimulationEnabled(bool value)
 {
     SimulationEnabled = value;
-    VISION_INFO("Phyics Engine Simulation Enabled: " + SimulationEnabled);
+    VISION_CORE_INFO("Phyics Engine Simulation Enabled: " + SimulationEnabled);
 }
 
 bool PhysicsEngine::IsSimulationEnabled()
