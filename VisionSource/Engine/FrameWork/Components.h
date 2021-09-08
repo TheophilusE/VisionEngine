@@ -19,6 +19,8 @@
 #include "ShaderMacroHelper.hpp"
 #include "../Render/Renderer.h"
 
+#include "btBulletCollisionCommon.h"
+
 namespace Vision
 {
 using namespace Diligent;
@@ -135,6 +137,32 @@ struct MeshComponent
     Vector<Uint32>                                m_PSOIndex;
     Vector<RefCntAutoPtr<IPipelineState>>         m_RenderMeshShadowPSO;
     Vector<RefCntAutoPtr<IShaderResourceBinding>> m_ShadowSRBs;
+};
+
+enum class CollisionMask : unsigned int
+{
+    None          = 0,
+    Player        = 1 << 0,
+    Enemy         = 1 << 1,
+    Architecture  = 1 << 2,
+    TriggerVolume = 1 << 3,
+    Other         = 1 << 4,
+    All           = Player | Enemy | Architecture | TriggerVolume | Other
+};
+
+struct CollisionComponent
+{
+    CollisionComponent() = default;
+    //CollisionComponent(const CollisionComponent&) = default;
+
+    Ref<btCollisionObject> m_CollisionObject;
+    unsigned int           m_CollisionGroup;
+    unsigned int           m_CollisionMask;
+
+    void DetachCollisionObject();
+    void AttachCollisionObject();
+
+    //virtual void handleHit(Hit* h);
 };
 
 } // namespace Vision
