@@ -5,6 +5,7 @@
 
 namespace Vision
 {
+
 PhysicsEngine* PhysicsEngine::GetSingleton()
 {
     static PhysicsEngine singleton;

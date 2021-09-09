@@ -1,5 +1,7 @@
 
 #include "Components.h"
+#include "../Core/Physics/PhysicsEngine.h"
+#include "imgui.h"
 
 namespace Vision
 {
@@ -149,6 +151,370 @@ void MeshComponent::CreateGLTFResourceCache(Renderer& renderer)
     m_CacheUseInfo.NormalFormat       = TEX_FORMAT_RGBA8_UNORM;
     m_CacheUseInfo.OcclusionFormat    = TEX_FORMAT_RGBA8_UNORM;
     m_CacheUseInfo.EmissiveFormat     = TEX_FORMAT_RGBA8_UNORM;
+}
+
+RigidBodyComponent::RigidBodyComponent(int collisionGroup, int collisionMask) :
+    m_CollisionGroup(collisionGroup), m_CollisionMask(collisionMask)
+{
+}
+
+RigidBodyComponent::RigidBodyComponent(
+    const PhysicsMaterial&       material,
+    float                        volume,
+    const Vector3f&               offset,
+    const Vector3f&               gravity,
+    const Vector3f&               angularFactor,
+    int                          collisionGroup,
+    int                          collisionMask,
+    bool                         isMoveable,
+    bool                         isKinematic,
+    bool                         generatesHitEvents,
+    bool                         isSleepable,
+    bool                         isCCD,
+    const Ref<btCollisionShape>& collisionShape) :
+    RigidBodyComponent(collisionGroup, collisionMask), m_MaterialID(material), m_Volume(volume), m_Offset(offset), m_Gravity(gravity), m_AngularFactor(angularFactor), m_IsMoveable(isMoveable), m_IsGeneratesHitEvents(generatesHitEvents), m_IsSleepable(isSleepable), m_IsKinematic(isKinematic), m_IsCCD(isCCD)
+{
+    m_CollisionShape = collisionShape;
+}
+
+void RigidBodyComponent::RemovePhysicsBody()
+{
+    if (m_CollisionObject)
+    {
+        PhysicsEngine::GetSingleton()->RemoveCollisionObject(m_CollisionObject.get());
+        m_CollisionObject.reset();
+    }
+}
+
+void RigidBodyComponent::Draw()
+{
+    static bool showInEditor = true;
+    ImGui::Checkbox("Show in Editor", &showInEditor);
+    if (showInEditor)
+    {
+        Highlight();
+    }
+
+    ImGui::Combo("Physics Material", (int*)&m_MaterialID, PhysicsEngine::GetSingleton()->GetMaterialNames());
+
+    if (ImGui::DragFloat3("##Offset", &m_Offset.x(), 0.01f))
+    {
+        SetOffset(m_Offset);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Offset"))
+    {
+        SetOffset({0.0f, 0.0f, 0.0f});
+    }
+
+    if (ImGui::DragFloat3("Gravity", &m_Gravity.x(), 0.01f))
+    {
+        SetGravity(m_Gravity);
+    }
+
+    if (ImGui::DragFloat3("Angular Factor", &m_AngularFactor.x(), 0.01f))
+    {
+        SetAngularFactor(m_AngularFactor);
+    }
+
+    if (ImGui::Button("Apply Axis Lock"))
+    {
+        SetAxisLock(true);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Remove Axis Lock"))
+    {
+        SetAxisLock(false);
+    }
+
+    if (ImGui::Checkbox("Moveable", &m_IsMoveable))
+    {
+        SetMoveable(m_IsMoveable);
+    }
+
+    if (ImGui::Checkbox("Kinematic", &m_IsKinematic))
+    {
+        SetKinematic(m_IsKinematic);
+    }
+
+    if (ImGui::Checkbox("Sleepable", &m_IsSleepable))
+    {
+        SetSleepable(m_IsSleepable);
+    }
+
+    ImGui::Checkbox("Generates Hit Events", &m_IsGeneratesHitEvents);
+
+    if (ImGui::Checkbox("CCD", &m_IsCCD))
+    {
+        SetCCD(m_IsCCD);
+    }
+
+    UpdateTransform();
+
+
+    if (ImGui::TreeNodeEx("Collision Group"))
+    {
+        DisplayCollisionLayers(m_CollisionGroup);
+        ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNodeEx("Collision Mask"))
+    {
+        DisplayCollisionLayers(m_CollisionMask);
+        ImGui::TreePop();
+    }
+}
+
+void RigidBodyComponent::DisplayCollisionLayers(unsigned int& collision)
+{
+    ImGui::CheckboxFlags("Player", &collision, (int)CollisionMask::Player);
+    ImGui::CheckboxFlags("Enemy", &collision, (int)CollisionMask::Enemy);
+    ImGui::CheckboxFlags("Architecture", &collision, (int)CollisionMask::Architecture);
+    ImGui::CheckboxFlags("TriggerVolume", &collision, (int)CollisionMask::TriggerVolume);
+    ImGui::CheckboxFlags("All", &collision, (int)CollisionMask::All);
+}
+
+void RigidBodyComponent::DetachCollisionObject()
+{
+    PhysicsEngine::GetSingleton()->RemoveCollisionObject(m_CollisionObject.get());
+}
+
+void RigidBodyComponent::AttachCollisionObject()
+{
+    PhysicsEngine::GetSingleton()->AddCollisionObject(m_CollisionObject.get(), m_CollisionGroup, m_CollisionMask);
+}
+
+bool RigidBodyComponent::SetupData()
+{
+    if (m_Body)
+    {
+        PhysicsEngine::GetSingleton()->RemoveRigidBody(m_Body);
+    }
+
+    if (m_IsMoveable)
+    {
+        m_Mass = m_Volume * PhysicsEngine::GetSingleton()->GetMaterialData(m_MaterialID).GravityScale;
+        m_CollisionShape->calculateLocalInertia(m_Mass, m_LocalInertia);
+    }
+    else
+    {
+        m_Mass = 0.0f;
+    }
+
+    btRigidBody::btRigidBodyConstructionInfo rbInfo(m_Mass, this, m_CollisionShape.get(), m_LocalInertia);
+    {
+        const PhysicsMaterialData& materialData = PhysicsEngine::GetSingleton()->GetMaterialData(m_MaterialID);
+        rbInfo.m_restitution                    = materialData.Restitution;
+        rbInfo.m_friction                       = materialData.Friction;
+    }
+
+    m_CollisionObject.reset(new btRigidBody(rbInfo));
+    m_Body = (btRigidBody*)m_CollisionObject.get();
+    m_Body->setUserPointer((RigidBodyComponent*)this);
+    PhysicsEngine::GetSingleton()->AddRigidBody(m_Body, m_CollisionGroup, m_CollisionMask);
+
+    SetGravity(m_Gravity);
+    SetMoveable(m_IsMoveable);
+    SetKinematic(m_IsKinematic);
+    SetAngularFactor(m_AngularFactor);
+    SetSleepable(m_IsSleepable);
+    SetCCD(m_IsCCD);
+
+    return true;
+}
+
+void RigidBodyComponent::GetWorldTransform(btTransform& worldTrans) const
+{
+    //worldTrans = MatTobtTransform(getTransformComponent()->getRotationPosition() * Matrix::CreateTranslation(m_Offset));
+}
+
+void RigidBodyComponent::SetWorldTransform(const btTransform& worldTrans)
+{
+    //getTransformComponent()->setAbsoluteRotationPosition(Matrix::CreateTranslation(-m_Offset) * BtTransformToMat(worldTrans));
+}
+
+void RigidBodyComponent::UpdateTransform()
+{
+    btTransform transform;
+    GetWorldTransform(transform);
+    m_Body->activate(true);
+    m_Body->setWorldTransform(transform);
+}
+
+void RigidBodyComponent::ApplyForce(const Vector3f& force)
+{
+    m_Body->activate(true);
+   // m_Body->applyCentralImpulse(VecTobtVector3(force));
+}
+
+void RigidBodyComponent::ApplyTorque(const Vector3f& torque)
+{
+    m_Body->activate(true);
+    //m_Body->applyTorqueImpulse(VecTobtVector3(torque));
+}
+
+
+void RigidBodyComponent::SetAngularFactor(const Vector3f& factors)
+{
+    m_AngularFactor = factors;
+    m_Body->activate(true);
+    //m_Body->setAngularFactor(VecTobtVector3(factors));
+}
+
+void RigidBodyComponent::SetAxisLock(bool enabled)
+{
+    if (enabled)
+    {
+        SetAngularFactor({0.0f, 0.0f, 0.0f});
+    }
+    else
+    {
+        SetAngularFactor({1.0f, 1.0f, 1.0f});
+    }
+}
+
+void RigidBodyComponent::SetOffset(const Vector3f& offset)
+{
+    m_Offset = offset;
+    m_Body->activate(true);
+    SetupData();
+}
+
+void RigidBodyComponent::SetTransform(const Matrix4f& mat)
+{
+    m_Body->activate(true);
+    //m_Body->setWorldTransform(MatTobtTransform(mat));
+}
+
+Matrix4f RigidBodyComponent::GetTransform()
+{
+    //return BtTransformToMat(m_Body->getCenterOfMassTransform());
+    return Matrix4f();
+}
+
+void RigidBodyComponent::SetMoveable(bool enabled)
+{
+    m_IsMoveable = enabled;
+    if (enabled)
+    {
+        m_Mass = m_Volume * PhysicsEngine::GetSingleton()->GetMaterialData(m_MaterialID).GravityScale;
+        m_Body->activate(true);
+        m_Body->setCollisionFlags(m_Body->getCollisionFlags() & ~btCollisionObject::CF_STATIC_OBJECT);
+    }
+    else
+    {
+        m_Mass = 0.0f;
+        m_Body->activate(true);
+        m_Body->setCollisionFlags(m_Body->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+    }
+    m_Body->setMassProps(m_Mass, m_LocalInertia);
+}
+
+void RigidBodyComponent::SetSleepable(bool enabled)
+{
+    m_IsSleepable = enabled;
+    if (enabled)
+    {
+        m_Body->forceActivationState(ACTIVE_TAG);
+    }
+    else
+    {
+        m_Body->forceActivationState(DISABLE_DEACTIVATION);
+    }
+}
+
+void RigidBodyComponent::SetCCD(bool enabled)
+{
+    // https://github.com/godotengine/godot/blob/46de553473b4bea49176fb4316176a5662931160/modules/bullet/rigid_body_bullet.cpp#L722
+
+    if (enabled)
+    {
+        // This threshold enable CCD if the object moves more than
+        // 1 meter in one simulation frame
+        m_Body->setCcdMotionThreshold(1e-7f);
+
+        /// Calculate using the rule write below the CCD swept sphere radius
+        ///     CCD works on an embedded sphere of radius, make sure this radius
+        ///     is embedded inside the convex objects, preferably smaller:
+        ///     for an object of dimensions 1 metre, try 0.2
+        btScalar radius(1.0f);
+        if (m_Body->getCollisionShape())
+        {
+            btVector3 center;
+            m_Body->getCollisionShape()->getBoundingSphere(center, radius);
+        }
+        m_Body->setCcdSweptSphereRadius(radius * 0.2f);
+    }
+    else
+    {
+        m_Body->setCcdMotionThreshold(0.0f);
+        m_Body->setCcdSweptSphereRadius(0.0f);
+    }
+}
+
+void RigidBodyComponent::SetKinematic(bool enabled)
+{
+    m_IsKinematic = enabled;
+    if (enabled)
+    {
+        m_Body->forceActivationState(DISABLE_DEACTIVATION);
+        m_Body->setCollisionFlags(m_Body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+    }
+    else
+    {
+        m_Body->forceActivationState(ACTIVE_TAG);
+        m_Body->setActivationState(ACTIVE_TAG);
+        m_Body->setCollisionFlags(m_Body->getCollisionFlags() & ~btCollisionObject::CF_KINEMATIC_OBJECT);
+    }
+}
+
+void RigidBodyComponent::Highlight()
+{
+    //PhysicsEngine::GetSingleton()->DebugDrawComponent(
+     //   m_Body->getWorldTransform(),
+      //  m_CollisionShape.get(),
+      //  VecTobtVector3({0.8f, 0.1f, 0.1f}));
+}
+
+void RigidBodyComponent::SetVelocity(const Vector3f& velocity)
+{
+    m_Body->activate(true);
+    //m_Body->setLinearVelocity(VecTobtVector3(velocity));
+}
+
+Vector3f RigidBodyComponent::GetVelocity()
+{
+    //return BtVector3ToVec(m_Body->getLinearVelocity());
+    return Vector3f();
+}
+
+void RigidBodyComponent::SetAngularVelocity(const Vector3f& angularVel)
+{
+    m_Body->activate(true);
+    //m_Body->setAngularVelocity(VecTobtVector3(angularVel));
+}
+
+Vector3f RigidBodyComponent::GetAngularVelocity()
+{
+    //return BtVector3ToVec(m_Body->getAngularVelocity());
+    return Vector3f();
+}
+
+void RigidBodyComponent::Translate(const Vector3f& vec)
+{
+    m_Body->activate(true);
+    //m_Body->translate(VecTobtVector3(vec));
+}
+
+void RigidBodyComponent::SetGravity(const Vector3f& gravity)
+{
+    m_Body->activate(true);
+    //m_Body->setGravity(VecTobtVector3(gravity));
+}
+
+PhysicsMaterial RigidBodyComponent::GetMaterialID() const
+{
+    return m_MaterialID;
 }
 
 } // namespace Vision

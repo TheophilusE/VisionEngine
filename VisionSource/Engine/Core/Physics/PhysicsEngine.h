@@ -8,6 +8,7 @@
 #include "../OS/OS.h"
 #include "../Math/VMath.h"
 
+
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/CollisionDispatch/btGhostObject.h"
 
@@ -16,6 +17,7 @@
 
 namespace Vision
 {
+
 struct PhysicsInitInfo
 {
     bool Enabled           = true;

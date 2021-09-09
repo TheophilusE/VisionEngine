@@ -2,8 +2,7 @@
 #pragma once
 #include "../Core/OS/OS.h"
 
-#include <vector>
-
+#include "../Core/Math/VMath.h"
 #include "FirstPersonCamera.hpp"
 
 #include "FileSystem.hpp"
@@ -150,19 +149,114 @@ enum class CollisionMask : unsigned int
     All           = Player | Enemy | Architecture | TriggerVolume | Other
 };
 
-struct CollisionComponent
-{
-    CollisionComponent() = default;
-    //CollisionComponent(const CollisionComponent&) = default;
+enum PhysicsMaterial;
 
+struct RigidBodyComponent
+{
+    RigidBodyComponent() = default;
+    //RigidBodyComponent(const RigidBodyComponent&) = default;
+
+public:
+    RigidBodyComponent(int collisionGroup, int collisionMask);
+    virtual ~RigidBodyComponent() = default;
+
+    RigidBodyComponent(
+        const PhysicsMaterial&                   material,
+        float                        volume,
+        const Vector3f&              offset,
+        const Vector3f&              gravity,
+        const Vector3f&              angularFactor,
+        int                          collisionGroup,
+        int                          collisionMask,
+        bool                         isMoveable,
+        bool                         isKinematic,
+        bool                         generatesHitEvents,
+        bool                         canSleep,
+        bool                         isCCD,
+        const Ref<btCollisionShape>& collisionShape);
+
+
+    //virtual void handleHit(Hit* h);
+
+    void RemovePhysicsBody();
+    void Draw();
+    void DisplayCollisionLayers(unsigned int& collision);
+
+    void ApplyForce(const Vector3f& force);
+    void ApplyTorque(const Vector3f& torque);
+
+    Vector3f GetAngularFactor() const { return m_AngularFactor; }
+    void     SetAngularFactor(const Vector3f& factors);
+    void     SetAxisLock(bool enabled);
+
+    Vector3f GetOffset() const { return m_Offset; };
+    void     SetOffset(const Vector3f& offset);
+
+    Vector3f GetGravity() const { return m_Gravity; };
+    void     SetGravity(const Vector3f& gravity);
+
+    PhysicsMaterial GetMaterialID() const;
+
+    Vector3f GetVelocity();
+    void     SetVelocity(const Vector3f& velocity);
+
+    Vector3f GetAngularVelocity();
+    void     SetAngularVelocity(const Vector3f& angularVel);
+
+    void Translate(const Vector3f& vec);
+
+    void     SetTransform(const Matrix4f& matrix);
+    Matrix4f GetTransform();
+
+    bool IsMoveable() { return m_IsMoveable; }
+    void SetMoveable(bool enabled);
+
+    bool CanSleep() { return m_IsSleepable; }
+    void SetSleepable(bool enabled);
+
+    bool IsCCD() { return m_IsCCD; }
+    void SetCCD(bool enabled);
+
+    bool IsGeneratesHitEvents() { return m_IsGeneratesHitEvents; }
+    void SetGeneratedHitEvents(bool enabled) { m_IsGeneratesHitEvents = enabled; }
+
+    bool IsKinematic() { return m_IsKinematic; }
+    void SetKinematic(bool enabled);
+
+    bool SetupData();
+
+    void Highlight();
+    
+protected:
     Ref<btCollisionObject> m_CollisionObject;
     unsigned int           m_CollisionGroup;
     unsigned int           m_CollisionMask;
 
+    Ref<btCollisionShape> m_CollisionShape;
+    btRigidBody*          m_Body = nullptr;
+    bool                  m_IsGeneratesHitEvents;
+    btScalar              m_Mass;
+    Vector3f              m_Gravity;
+    Vector3f              m_AngularFactor;
+    Vector3f              m_Offset;
+    float                 m_Volume;
+    bool                  m_IsMoveable;
+    bool                  m_IsKinematic;
+    bool                  m_IsSleepable;
+    bool                  m_IsCCD;
+    PhysicsMaterial       m_MaterialID;
+
+    btVector3 m_LocalInertia;
+
     void DetachCollisionObject();
     void AttachCollisionObject();
 
-    //virtual void handleHit(Hit* h);
+    void GetWorldTransform(btTransform& worldTrans) const;
+    void SetWorldTransform(const btTransform& worldTrans);
+
+    void UpdateTransform();
+
+    //void handleHit(Hit* hit) override;
 };
 
 } // namespace Vision
