@@ -323,9 +323,11 @@ bool RigidBodyComponent::SetupData()
     return true;
 }
 
-void RigidBodyComponent::GetWorldTransform(btTransform& worldTrans) const
+void RigidBodyComponent::GetWorldTransform(btTransform& worldTrans, TransformComponent& transform) const
 {
     //worldTrans = MatTobtTransform(getTransformComponent()->getRotationPosition() * Matrix::CreateTranslation(m_Offset));
+    //worldTrans = Matrix4fTobtTransform(GetTransformComponent()->GetRotationPosition() * Matrix4f::CreateTranslation(m_Offset));
+    worldTrans = Matrix4fTobtTransform(ConvertToMatrix4f(transform.GetTransform()));
 }
 
 void RigidBodyComponent::SetWorldTransform(const btTransform& worldTrans)

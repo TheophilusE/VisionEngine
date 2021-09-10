@@ -3,7 +3,12 @@
 #pragma warning(disable : 4127)
 
 #include <Eigen/Dense>
+#include <Eigen/Geometry>
+
 #include "AdvancedMath.hpp"
+
+#include "LinearMath/btTransform.h"
+#include "LinearMath/btVector3.h"
 
 namespace Vision
 {
@@ -23,6 +28,17 @@ using Matrix4d = Eigen::Matrix4d;
 
 using Quaternionf = Eigen::Quaternionf;
 using Quaterniond = Eigen::Quaterniond;
+
+using AlignedBox1i = Eigen::AlignedBox1i;
+using AlignedBox1f = Eigen::AlignedBox1f;
+using AlignedBox1d = Eigen::AlignedBox1d;
+using AlignedBox2i = Eigen::AlignedBox2i;
+using AlignedBox2f = Eigen::AlignedBox2f;
+using AlignedBox2d = Eigen::AlignedBox2d;
+using AlignedBox3f = Eigen::AlignedBox3f;
+using AlignedBox3d = Eigen::AlignedBox3d;
+using AlignedBox4f = Eigen::AlignedBox4f;
+using AlignedBox4d = Eigen::AlignedBox4d;
 
 // Convert Diligent Float2 To Vector2f
 static Vision::Vector2f ConvertToVector2f(Diligent::float2& vector);
@@ -93,4 +109,17 @@ static Diligent::Quaternion ConvertToQuaternion(Vision::Quaternionf& vector);
 static Vision::Quaterniond ConvertToQuaterniond(Diligent::Quaternion& vector);
 // Convert Quaterniond To Diligent Quaternion
 static Diligent::Quaternion ConvertToQuaternion(Vision::Quaterniond& vector);
+
+// Convert Matrix4f to Bullet Transform Matrix
+static btTransform Matrix4fTobtTransform(Matrix4f const& matrix);
+
+// Convert Bullet Transform Matrix To Matrix4f
+static Matrix4f BtTransformToMatrix4f(btTransform const& transform);
+
+// Convert Vector3f To Bullet Vector3
+static btVector3 Vector3fTobtVector3(Vector3f const& vector);
+
+// Convert Bullet Vector3 To Vector3f
+static Vector3f BtVector3ToVector3f(btVector3 const& vector);
+
 } // namespace Vision

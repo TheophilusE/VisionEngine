@@ -55,6 +55,80 @@ struct TransformComponent
     }
 };
 
+enum class TransformPassDown : int
+{
+    Position = 1 << 0,
+    Rotation = 1 << 1,
+    Scale    = 1 << 2,
+    All      = Position | Rotation | Scale
+};
+
+struct TransformComponentAdvanced
+{
+    TransformComponentAdvanced()                                  = default;
+    TransformComponentAdvanced(const TransformComponentAdvanced&) = default;
+
+    void SetPosition(const Vector3f& position);
+    void SetRotation(const float& yaw, const float& pitch, const float& roll);
+    void SetRotationQuaternion(const Vision::Quaternion& rotation);
+    void SetScale(const Vision::Vector3f& scale);
+    void SetLocalTransform(const Matrix4f& transform);
+    void SetAbsoluteTransform(const Matrix4f& transform);
+    void SetBounds(const AlignedBox3f& bounds);
+    void SetRotationPosition(const Matrix4f& transform);
+    void SetAbsoluteRotationPosition(const Matrix4f& transform);
+    void SetParentAbsoluteTransform(const Matrix4f& parentTransform);
+
+    void AddLocalTransform(const Matrix4f& applyTransform);
+    void AddQuaternion(const Vision::Quaternion& applyQuaternion);
+    void AddRotation(float yaw, float pitch, float roll);
+
+    Vector3f        GetPosition() const { return m_TransformBuffer.Translation; }
+    Vision::Quaternion     GetRotation() const { return m_TransformBuffer.Rotation; };
+    const Vector3f& GetScale() const { return m_TransformBuffer.Scale; }
+    const Matrix4f&  GetLocalTransform() const { return m_TransformBuffer.Transform; }
+    //Matrix4f         GetRotationPosition() const { return Matrix::CreateFromQuaternion(m_TransformBuffer.rotation) * Matrix::CreateTranslation(m_TransformBuffer.position) * m_ParentAbsoluteTransform; }
+    Matrix4f       GetRotationPosition() const { return m_TransformBuffer.Rotation.ToMatrix(); }
+    Matrix4f         GetParentAbsoluteTransform() const { return m_ParentAbsoluteTransform; }
+    int            GetPassDowns() const { return m_TransformPassDown; }
+
+    AlignedBox3f GetWorldSpaceBounds();
+
+    Matrix4f     GetAbsoluteTransform();
+    Vector3f    GetAbsolutePosition();
+    void       SetAbsolutePosition(const Vector3f& position);
+    Vision::Quaternion GetAbsoluteRotation();
+    Vector3f    GetAbsoluteScale();
+
+    void       Draw();
+    void       Highlight();
+
+private:
+    struct TransformBuffer
+    {
+        Vector3f           Translation;
+        Vision::Quaternion Rotation;
+        Vector3f           Scale;
+        AlignedBox3f       BoundingBox;
+
+        Matrix4f Transform;
+    };
+    TransformBuffer m_TransformBuffer;
+    int      m_TransformPassDown;
+    Matrix4f m_ParentAbsoluteTransform;
+
+    Matrix4f           m_AbsoluteTransform;
+    Vector3f           m_AbsolutePosition;
+    Vision::Quaternion m_AbsoluteRotation;
+    Vector3f           m_AbsoluteScale;
+    bool               m_IsAbsoluteTransformDirty = true;
+    bool               m_OverrideBoundingBox;
+
+    void UpdateAbsoluteTransformValues();
+    void UpdateTransformFromPositionRotationScale();
+    void UpdatePositionRotationScaleFromTransform(Matrix4f& transform);
+};
+
 struct BoundingBoxComponent
 {
     BoundingBoxComponent()                            = default;
@@ -161,7 +235,7 @@ public:
     virtual ~RigidBodyComponent() = default;
 
     RigidBodyComponent(
-        const PhysicsMaterial&                   material,
+        const PhysicsMaterial&       material,
         float                        volume,
         const Vector3f&              offset,
         const Vector3f&              gravity,
@@ -226,7 +300,7 @@ public:
     bool SetupData();
 
     void Highlight();
-    
+
 protected:
     Ref<btCollisionObject> m_CollisionObject;
     unsigned int           m_CollisionGroup;
@@ -251,7 +325,7 @@ protected:
     void DetachCollisionObject();
     void AttachCollisionObject();
 
-    void GetWorldTransform(btTransform& worldTrans) const;
+    void GetWorldTransform(btTransform& worldTrans, TransformComponent& transform) const;
     void SetWorldTransform(const btTransform& worldTrans);
 
     void UpdateTransform();

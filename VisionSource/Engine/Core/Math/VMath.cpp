@@ -222,4 +222,74 @@ static Diligent::Quaternion ConvertToQuaternion(Vision::Quaterniond& vector)
     return Diligent::Quaternion{static_cast<float>(vector.x()), static_cast<float>(vector.y()), static_cast<float>(vector.z()), static_cast<float>(vector.w())};
 }
 
+static btTransform Matrix4fTobtTransform(Matrix4f const& matrix)
+{
+    // convert from Mat4x4 to btTransform
+    btMatrix3x3 bulletRotation;
+    btVector3   bulletPosition;
+
+    // copy rotation matrix
+    for (int row = 0; row < 3; ++row)
+    {
+        for (int column = 0; column < 3; ++column)
+        {
+            bulletRotation[row][column] = matrix(column, row);
+            // note the reversed indexing (row/column vs. column/row)
+            // this is because Mat4x4s are row-major matrices and
+            // btMatrix3x3 are column-major.  This reversed indexing
+            // implicitly transposes (flips along the diagonal)
+            // the matrix when it is copied.
+        }
+    }
+
+    // copy position
+    for (int column = 0; column < 3; ++column)
+    {
+        bulletPosition[column] = matrix(3, column);
+    }
+
+    return btTransform(bulletRotation, bulletPosition);
+}
+
+Matrix4f BtTransformToMatrix4f(btTransform const& transform)
+{
+    Matrix4f returnValue = Matrix4f::Identity();
+
+    // convert from btTransform to Mat4x4
+    btMatrix3x3 const& bulletRotation = transform.getBasis();
+    btVector3 const&   bulletPosition = transform.getOrigin();
+
+    // copy rotation matrix
+    for (int row = 0; row < 3; ++row)
+    {
+        for (int column = 0; column < 3; ++column)
+        {
+            returnValue(row, column) = bulletRotation[column][row];
+            // note the reversed indexing (row/column vs. column/row)
+            // this is because Mat4x4s are row-major matrices and
+            // btMatrix3x3 are column-major.  This reversed indexing
+            // implicitly transposes (flips along the diagonal)
+            // the matrix when it is copied.
+        }
+    }
+
+    // copy position
+    for (int column = 0; column < 3; ++column)
+    {
+        returnValue(3, column) = bulletPosition[column];
+    }
+
+    return returnValue;
+}
+
+static btVector3 Vector3fTobtVector3(Vector3f const& vector)
+{
+    return btVector3(vector.x(), vector.y(), vector.z());
+}
+
+static Vector3f BtVector3ToVector3f(btVector3 const& vector)
+{
+    return Vector3f(vector.x(), vector.y(), vector.z());
+}
+
 } // namespace Vision
